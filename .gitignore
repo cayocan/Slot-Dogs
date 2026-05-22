@@ -1,0 +1,100 @@
+# Unity + Node .gitignore
+# Coloque na raiz do repositório que contém os projetos Unity e Node
+
+# --- Sistema / OS ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- IDEs / editores ---
+.vscode/
+.vs/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.unityproj
+*.booproj
+*.sln
+*.csproj
+*.pidb
+*.sdf
+*.db
+*.opendb
+*.VC.db
+
+# --- Unity ---
+# Pastas geradas pelo Unity (não devem ser versionadas)
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+sys/
+UserSettings/
+
+# Arquivos gerados/autogerados do Unity
+*.pidb
+*.pdb
+*.mdb
+*.opendb
+*.apk
+*.aab
+*.unitypackage
+AssetStoreTools*
+crash.log
+crash.dmp
+
+# --- Node.js / Backend ---
+# dependências
+node_modules/
+
+# logs e debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log
+
+# variáveis de ambiente (sensíveis)
+.env
+.env.*.local
+
+# outputs / caches
+dist/
+build/
+out/
+.tmp/
+tmp/
+temp/
+.cache/
+.next/
+.nuxt/
+
+# coverage / testes
+coverage/
+.nyc_output/
+
+# logs gerais
+logs/
+*.log
+*.log.*
+
+# --- Misc ---
+*.bak
+*~
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Garantir que metadados do Unity sejam versionados
+!*.meta
