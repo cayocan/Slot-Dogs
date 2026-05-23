@@ -3,6 +3,7 @@
 const Fastify = require('fastify');
 const cors = require('@fastify/cors');
 const config = require('./engine/config');
+const { version } = require('../package.json');
 
 /**
  * Constrói e configura a instância Fastify.
@@ -12,6 +13,37 @@ const config = require('./engine/config');
  */
 function buildApp(opts = {}) {
   const app = Fastify(opts);
+
+  // Swagger deve ser registrado ANTES das rotas para capturar os schemas
+  app.register(require('@fastify/swagger'), {
+    openapi: {
+      openapi: '3.0.3',
+      info: {
+        title: 'Slot Dogs API',
+        version,
+        description:
+          'API do jogo de slot machine Slot Dogs. Utiliza RNG criptográfico (HMAC-SHA256) ' +
+          'e sistema provably fair para garantir auditabilidade de todos os resultados.',
+      },
+      tags: [
+        { name: 'Session', description: 'Criação e gerenciamento de sessão + provably fair' },
+        { name: 'Game',    description: 'Mecânica do jogo — realizar spin' },
+        { name: 'Audit',   description: 'Verificação independente de resultados' },
+        { name: 'Logs',    description: 'Streaming de eventos em tempo real (SSE)' },
+      ],
+    },
+  });
+
+  app.register(require('@fastify/swagger-ui'), {
+    routePrefix: '/docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: true,
+      tryItOutEnabled: true,
+    },
+    staticCSP: true,
+    transformSpecificationClone: true,
+  });
 
   app.register(cors, { origin: process.env.CORS_ORIGIN || '*' });
   app.register(require('./routes/session'));

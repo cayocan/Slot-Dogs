@@ -12,14 +12,14 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@fastify/cors": "^8.1.0",
+    "@fastify/swagger": "^8.0.0",
+    "@fastify/swagger-ui": "^4.2.0",
     "dotenv": "^16.3.1",
     "fastify": "^4.23.0",
-    "@fastify/cors": "^8.1.0",
     "pino": "^8.14.0",
     "pino-pretty": "^10.1.0",
-    "uuid": "^9.0.0",
-    "@fastify/swagger": "^8.0.0",
-    "@fastify/swagger-ui": "^5.0.0"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
