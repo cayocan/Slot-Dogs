@@ -5,10 +5,11 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon --watch src --exec node src/server.js"
+    "dev": "nodemon --watch src --exec node src/server.js",
+    "test": "node --test test/engine/config.test.js test/engine/spinEngine.test.js test/rng/rng.test.js test/provablyfair/pfManager.test.js test/routes/session.test.js test/routes/spin.test.js test/routes/verify.test.js"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "dependencies": {
     "dotenv": "^16.3.1",

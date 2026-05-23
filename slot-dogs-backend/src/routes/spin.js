@@ -15,7 +15,13 @@ module.exports = async function (fastify, opts) {
     if (!session) return reply.code(404).send({ error: 'session_not_found' });
     if (!session.clientSeed) return reply.code(400).send({ error: 'clientSeed_required' });
 
-    const bet = Number.isInteger(betPerLine) && betPerLine >= 1 ? betPerLine : session.betPerLine;
+    // Valida betPerLine se fornecido explicitamente
+    if (betPerLine !== undefined && betPerLine !== null) {
+      if (!Number.isInteger(betPerLine) || betPerLine < 1) {
+        return reply.code(400).send({ error: 'betPerLine deve ser inteiro >= 1' });
+      }
+    }
+    const bet = (betPerLine !== undefined && betPerLine !== null) ? betPerLine : session.betPerLine;
 
     // Decrementa free spins antes de qualquer lógica de custo
     const isFreePin = session.freeSpinsRemaining > 0;
