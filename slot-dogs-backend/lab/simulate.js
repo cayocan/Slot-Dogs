@@ -44,9 +44,13 @@ if (!isMainThread) {
       freeSpinSpins += res.freeSpinsAwarded;
     }
 
-    for (const lw of res.lineWins) {
-      if (lw.symbolId >= 0 && lw.symbolId < symbolHits.length) {
-        symbolHits[lw.symbolId]++;
+    // Conta aparições de cada símbolo em todas as 15 células da grid (5 reels × 3 rows)
+    // Usar a grid, não lineWins, para que Wild, Scatter e Blank também sejam contabilizados
+    for (const col of res.grid) {
+      for (const sym of col) {
+        if (sym >= 0 && sym < symbolHits.length) {
+          symbolHits[sym]++;
+        }
       }
     }
   }
