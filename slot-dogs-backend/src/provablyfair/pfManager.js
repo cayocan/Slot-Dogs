@@ -10,7 +10,7 @@ function createSession() {
 
   const session = {
     sessionId,
-    coins: 100,
+    coins: 500,
     serverSeed,
     serverSeedHash,
     clientSeed: null,

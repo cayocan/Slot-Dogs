@@ -93,13 +93,19 @@ module.exports = async function (fastify, opts) {
       }
     }
     const bet = (betPerLine !== undefined && betPerLine !== null) ? betPerLine : session.betPerLine;
+    const totalBet = bet * 15; // 15 paylines
 
     // Decrementa free spins antes de qualquer lógica de custo
     const isFreePin = session.freeSpinsRemaining > 0;
     if (isFreePin) session.freeSpinsRemaining -= 1;
 
-    // TODO: ENABLE_COST — descontar moedas quando ativado
-    // if (!isFreePin) deductCoins(session, bet * 15);
+    // Valida e desconta moedas (free spins não têm custo)
+    if (!isFreePin) {
+      if ((session.coins || 0) < totalBet) {
+        return reply.code(400).send({ error: 'insufficient_coins' });
+      }
+      deductCoins(session, totalBet);
+    }
 
     const floatsRes = pf.getSpinFloats(sessionId);
     if (!floatsRes.ok) return reply.code(400).send(floatsRes);
