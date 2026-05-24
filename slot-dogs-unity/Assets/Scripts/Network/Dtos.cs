@@ -97,6 +97,11 @@ public class LineWin
     public int multiplier;
     /// <summary>Moedas ganhas nessa linha (multiplier × betPerLine).</summary>
     public int coins;
+    /// <summary>
+    /// Posições vencedoras no grid: [[col, row], ...].
+    /// Preenchido pelo backend — o cliente usa para animação sem conhecer as paylines.
+    /// </summary>
+    public int[][] cells;
 }
 
 /// <summary>Resultado bruto do spin.</summary>
@@ -113,6 +118,8 @@ public class SpinData
     public LineWin[] lineWins;
     public int lineWinTotal;
     public int scatterCount;
+    /// <summary>Posições dos Scatters no grid: [[col, row], ...].</summary>
+    public int[][] scatterPositions;
     public int scatterCoins;
     public bool triggerFreeSpins;
     public int freeSpinsAwarded;

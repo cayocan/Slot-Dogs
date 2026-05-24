@@ -102,7 +102,7 @@ public class ReelStrip : MonoBehaviour
     {
         _library   = library;
         _instances = new GameObject[_slotContainers?.Length ?? 6];
-        ShowBlank();
+        ShowRandom();
     }
 
     /// <summary>Inicia a animação de giro contínuo.</summary>
@@ -162,6 +162,12 @@ public class ReelStrip : MonoBehaviour
         return _stopTcs.Task;
     }
 
+    /// <summary>Exibe símbolos aleatórios (sem Blank) nos 3 slots de resultado.</summary>
+    public void ShowRandom()
+    {
+        RandomizeRange(0, 3);
+    }
+
     /// <summary>Exibe o prefab Blank nos 3 slots de resultado.</summary>
     public void ShowBlank()
     {
@@ -175,7 +181,15 @@ public class ReelStrip : MonoBehaviour
         _spinTween?.Kill(); // dispara OnKill → resolve _stopTcs se pendente
         _spinTween = null;
     }
-
+    /// <summary>
+    /// Retorna o GameObject instanciado no slot de resultado indicado (row 0-2).
+    /// Usado pela view para animar símbolos vencedores com DOTween.
+    /// </summary>
+    public GameObject GetResultInstance(int row)
+    {
+        if (row < 0 || row >= 3 || _instances == null || row >= _instances.Length) return null;
+        return _instances[row];
+    }
     // ═════════════════════════════════════════════════════════════════════════
     //  Internos
     // ═════════════════════════════════════════════════════════════════════════

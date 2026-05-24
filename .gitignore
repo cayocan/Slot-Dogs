@@ -102,3 +102,6 @@ logs/
 
 # Garantir que metadados do Unity sejam versionados
 !*.meta
+slot-dogs-backend/_docs/PAYLINES.md
+slot-dogs-backend/lab/report.csv
+slot-dogs-backend/lab/report.json

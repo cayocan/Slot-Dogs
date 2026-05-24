@@ -65,7 +65,9 @@ function evaluateLines(grid, betPerLine) {
     if (count >= 3 && PAYTABLE[baseSymbol]) {
       const multiplier = PAYTABLE[baseSymbol][count - 3] || 0;
       const coins = multiplier * betPerLine;
-      lineWins.push({ lineId: pl.id, lineName: pl.name, symbolId: baseSymbol, count, multiplier, coins });
+      // cells: posições vencedoras [[col, row], ...] — enviadas ao cliente para animação
+      const cells = pl.path.slice(0, count).map((row, col) => [col, row]);
+      lineWins.push({ lineId: pl.id, lineName: pl.name, symbolId: baseSymbol, count, multiplier, coins, cells });
     }
   }
 
@@ -90,6 +92,14 @@ function evaluateSpin(stopPositions, betPerLine = 1) {
   const { lineWins, lineWinTotal } = evaluateLines(grid, betPerLine);
   const scatterCount = countScatters(grid);
 
+  // Posições exatas dos Scatters no grid [[col, row], ...]
+  const scatterPositions = [];
+  for (let col = 0; col < grid.length; col++) {
+    for (let row = 0; row < grid[col].length; row++) {
+      if (grid[col][row] === SCATTER_ID) scatterPositions.push([col, row]);
+    }
+  }
+
   const scatterCoins = (scatterCount >= 3 && (scatterCount in SCATTER_MULTIPLIERS))
     ? SCATTER_MULTIPLIERS[scatterCount] * totalBet
     : 0;
@@ -111,6 +121,7 @@ function evaluateSpin(stopPositions, betPerLine = 1) {
     lineWins,
     lineWinTotal,
     scatterCount,
+    scatterPositions,
     scatterCoins,
     triggerFreeSpins,
     freeSpinsAwarded,

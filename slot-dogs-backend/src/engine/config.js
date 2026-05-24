@@ -25,12 +25,12 @@ const SYMBOLS = [
 ];
 
 const PAYTABLE = {
-  [SYMBOL_IDS.HUSKY]: [15, 75, 500],
-  [SYMBOL_IDS.GOLDEN]: [8, 40, 200],
-  [SYMBOL_IDS.SHIBA]: [6, 30, 150],
-  [SYMBOL_IDS.PUG]: [4, 20, 80],
-  [SYMBOL_IDS.BEAGLE]: [3, 15, 60],
-  [SYMBOL_IDS.DACHSHUND]: [2, 10, 40],
+  [SYMBOL_IDS.HUSKY]: [35, 75, 500],       // 3x muito melhor (mais raro: 6.7%)
+  [SYMBOL_IDS.GOLDEN]: [15, 40, 200],      // 3x melhorado (raro: 10%)
+  [SYMBOL_IDS.SHIBA]: [12, 35, 175],       // 3x melhorado (raro: 10%)
+  [SYMBOL_IDS.PUG]: [9, 22, 90],           // 3x melhorado (médio: 10%)
+  [SYMBOL_IDS.BEAGLE]: [6, 18, 65],        // 3x melhorado (16.7%)
+  [SYMBOL_IDS.DACHSHUND]: [5, 16, 55],     // calibrado para 98% RTP com scatter 6.5%
 };
 
 const SCATTER_MULTIPLIERS = {
@@ -40,13 +40,13 @@ const SCATTER_MULTIPLIERS = {
 };
 
 // Weights per symbol for each reel. Order of symbols: [Husky, Golden, Shiba, Pug, Beagle, Dachshund, Wild, Scatter, Blank]
-// Tuned for ~96% RTP (lab validated)
+// Scatter interno dobrado (1→2): bonus trigger mais acessível
 const REEL_WEIGHTS = [
-  [1, 2, 2, 3, 5, 12, 0, 2, 3],  // reel 1 — sem wild (outer)
-  [1, 2, 2, 3, 5, 11, 2, 1, 3],  // reel 2
-  [1, 2, 2, 3, 4, 11, 2, 1, 4],  // reel 3 — central
-  [1, 2, 2, 3, 5, 11, 2, 1, 3],  // reel 4
-  [1, 2, 2, 3, 5, 12, 0, 2, 3],  // reel 5 — sem wild (outer)
+  [2, 3, 3, 3, 5, 10, 0, 2, 2],  // reel 1 — sem wild (outer)
+  [2, 3, 3, 3, 4, 10, 2, 2, 1],  // reel 2 — scatter 1→2, blank 2→1
+  [2, 3, 3, 3, 4, 10, 2, 2, 1],  // reel 3 — central, scatter 1→2, blank 2→1
+  [2, 3, 3, 3, 4, 10, 2, 2, 1],  // reel 4 — scatter 1→2, blank 2→1
+  [2, 3, 3, 3, 5, 10, 0, 2, 2],  // reel 5 — sem wild (outer)
 ];
 
 function expandAndShuffle(weights) {
@@ -70,21 +70,18 @@ function expandAndShuffle(weights) {
 const REELS = REEL_WEIGHTS.map(expandAndShuffle);
 
 const PAYLINES = [
-  { id: 1, name: 'Linha do meio', path: [1, 1, 1, 1, 1] },
-  { id: 2, name: 'Linha de cima', path: [0, 0, 0, 0, 0] },
-  { id: 3, name: 'Linha de baixo', path: [2, 2, 2, 2, 2] },
-  { id: 4, name: 'V invertido', path: [0, 1, 2, 1, 0] },
-  { id: 5, name: 'V normal', path: [2, 1, 0, 1, 2] },
-  { id: 6, name: 'Diagonal ↘', path: [0, 0, 1, 2, 2] },
-  { id: 7, name: 'Diagonal ↗', path: [2, 2, 1, 0, 0] },
-  { id: 8, name: 'Z cima→baixo', path: [0, 0, 1, 2, 2] },
-  { id: 9, name: 'Z invertido', path: [2, 2, 1, 0, 0] },
-  { id: 10, name: 'Escada ↘', path: [0, 1, 1, 2, 2] },
-  { id: 11, name: 'Escada ↗', path: [2, 1, 1, 0, 0] },
-  { id: 14, name: 'Onda suave ↘', path: [0, 1, 1, 1, 2] },
-  { id: 15, name: 'Onda suave ↗', path: [2, 1, 1, 1, 0] },
-  { id: 16, name: 'Topo-meio-baixo', path: [0, 1, 2, 1, 0] },
-  { id: 20, name: 'Cruzada central', path: [1, 0, 1, 2, 1] },
+  { id: 1,  name: 'Linha do meio',    path: [1, 1, 1, 1, 1] },
+  { id: 2,  name: 'Linha de cima',    path: [0, 0, 0, 0, 0] },
+  { id: 3,  name: 'Linha de baixo',   path: [2, 2, 2, 2, 2] },
+  { id: 4,  name: 'V invertido',      path: [0, 1, 2, 1, 0] },
+  { id: 5,  name: 'V normal',         path: [2, 1, 0, 1, 2] },
+  { id: 6,  name: 'Diagonal ↘',      path: [0, 0, 1, 2, 2] },
+  { id: 7,  name: 'Diagonal ↗',      path: [2, 2, 1, 0, 0] },
+  { id: 10, name: 'Escada ↘',        path: [0, 1, 1, 2, 2] },
+  { id: 11, name: 'Escada ↗',        path: [2, 1, 1, 0, 0] },
+  { id: 14, name: 'Onda suave ↘',    path: [0, 1, 1, 1, 2] },
+  { id: 15, name: 'Onda suave ↗',    path: [2, 1, 1, 1, 0] },
+  { id: 20, name: 'Cruzada central',  path: [1, 0, 1, 2, 1] },
 ];
 
 module.exports = {

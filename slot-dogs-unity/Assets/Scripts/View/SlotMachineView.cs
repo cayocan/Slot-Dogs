@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -38,6 +41,10 @@ public class SlotMachineView : MonoBehaviour
     [SerializeField] private TMP_Text   _totalWinText;
     [SerializeField] private TMP_Text   _winLevelText;
 
+    [Header("Contador de Ganho (Big+)")]
+    [Tooltip("Texto que exibe o total acumulado enquanto as linhas s\u00e3o animadas. S\u00f3 aparece em wins BIG, MEGA e JACKPOT.")]
+    [SerializeField] private TMP_Text _runningWinText;
+
     // ── Estado da sessão ──────────────────────────────────────────────────────
 
     [Header("Estado da Sessão")]
@@ -61,6 +68,10 @@ public class SlotMachineView : MonoBehaviour
     [Header("Animação de Giro")]
     [Tooltip("Delay em ms entre a parada de cada reel (esq→dir)")]
     [SerializeField] private int _reelStopDelayMs = 300;
+
+    [Header("Debug")]
+    [Tooltip("Quando ativo, imprime o grid do resultado no Console após cada giro")]
+    [SerializeField] private bool _debugLogGrid;
 
     // ── Eventos (consumidos pelo SlotMachinePresenter) ────────────────────────
 
@@ -170,6 +181,10 @@ public class SlotMachineView : MonoBehaviour
     {
         if (_winInfoPanel != null)
             _winInfoPanel.SetActive(visible);
+
+        // Esconde o contador acumulado quando o painel de ganho aparece
+        if (visible && _runningWinText != null)
+            _runningWinText.gameObject.SetActive(false);
     }
 
     // ── Animação ──────────────────────────────────────────────────────────────
@@ -178,6 +193,10 @@ public class SlotMachineView : MonoBehaviour
     public void StartSpinVisual()
     {
         SetWinPanelVisible(false);
+
+        if (_runningWinText != null)
+            _runningWinText.gameObject.SetActive(false);
+
         if (_reels == null) return;
         foreach (var reel in _reels)
             reel?.StartSpin();
@@ -199,6 +218,12 @@ public class SlotMachineView : MonoBehaviour
         }
 
         await UniTask.WhenAll(tasks);
+
+        if (_debugLogGrid) LogGrid(result.spin.grid);
+
+        // Anima os símbolos vencedores antes de exibir o painel de ganhos
+        await AnimateWinnersAsync(result);
+
         ShowWinInfo(result.spin.totalWin, result.spin.winLevel);
     }
 
@@ -207,5 +232,156 @@ public class SlotMachineView : MonoBehaviour
         if (reel == null) return;
         if (delayMs > 0) await UniTask.Delay(delayMs);
         await reel.StopSpinAsync(symbols);
+    }
+
+    // ── Animação de vencedores ────────────────────────────────────────────────
+
+    /// <summary>
+    /// Exibe cada ganho separadamente, um após o outro.
+    /// Em wins BIG, MEGA e JACKPOT exibe também um contador acumulado
+    /// que cresce em tamanho e faz pulse a cada linha.
+    /// </summary>
+    private async UniTask AnimateWinnersAsync(SpinResponse result)
+    {
+        if (result?.spin == null || result.spin.totalWin <= 0) return;
+
+        // ── Monta grupos ordenados: (células, moedas) ─────────────────────────
+
+        var winGroups = new List<(List<(int col, int row)> cells, int coins)>();
+
+        if (result.spin.lineWins != null)
+            foreach (var win in result.spin.lineWins)
+            {
+                var group = new List<(int col, int row)>();
+                if (win.cells != null)
+                    foreach (var cell in win.cells)
+                    { if (cell.Length >= 2) group.Add((cell[0], cell[1])); }
+                else
+                    // Fallback sem 'cells': anima apenas a fileira central de cada coluna
+                    for (int col = 0; col < win.count; col++)
+                        group.Add((col, 1));
+                if (group.Count > 0)
+                    winGroups.Add((group, win.coins));
+            }
+
+        if (result.spin.scatterPositions != null && result.spin.scatterPositions.Length > 0)
+        {
+            var sc = new List<(int col, int row)>();
+            foreach (var pos in result.spin.scatterPositions)
+                if (pos.Length >= 2) sc.Add((pos[0], pos[1]));
+            if (sc.Count > 0)
+                winGroups.Add((sc, result.spin.scatterCoins));
+        }
+
+        if (winGroups.Count == 0)
+        {
+            Debug.LogWarning("[SlotMachineView] AnimateWinnersAsync: sem células identificadas " +
+                             "(reinicie o backend para ativar 'cells' e 'scatterPositions').");
+            return;
+        }
+
+        // ── Contador acumulado: ativo apenas em BIG, MEGA, JACKPOT ───────────
+
+        bool showCounter = result.spin.winLevel is "big" or "mega" or "jackpot"
+                        && _runningWinText != null;
+
+        int   accumulated = 0;
+        float textScale   = 1f;
+
+        if (showCounter)
+        {
+            _runningWinText.transform.localScale = Vector3.one;
+            _runningWinText.text = string.Empty;
+            _runningWinText.gameObject.SetActive(true);
+        }
+
+        // ── Anima cada grupo em sequência ─────────────────────────────────────
+
+        for (int i = 0; i < winGroups.Count; i++)
+        {
+            var (cells, coins) = winGroups[i];
+            await AnimateCellGroupAsync(cells);
+
+            if (!showCounter) continue;
+
+            accumulated += coins;
+            textScale    = Mathf.Min(textScale + 0.2f, 2f);
+            _runningWinText.text = $"+{accumulated:N0}";
+
+            bool isLast = i == winGroups.Count - 1;
+            var  pulseTcs = new UniTaskCompletionSource();
+
+            _runningWinText.transform.DOKill();
+            float pulsePeak = Mathf.Min(textScale * 1.4f, 2f);
+            DOTween.Sequence()
+                .Append(_runningWinText.transform
+                    .DOScale(Vector3.one * pulsePeak, 0.08f).SetEase(Ease.OutQuad))
+                .Append(_runningWinText.transform
+                    .DOScale(Vector3.one * textScale, 0.15f).SetEase(Ease.OutBounce))
+                .OnComplete(() => pulseTcs.TrySetResult())
+                .OnKill   (() => pulseTcs.TrySetResult());
+
+            // Aguarda o pulse apenas do último ganho; os demais sobrepõem o próximo grupo
+            if (isLast)
+            {
+                await pulseTcs.Task;
+                await UniTask.Delay(300); // pausa final antes do painel de ganho
+            }
+        }
+    }
+
+    /// <summary>
+    /// Anima um grupo de células em paralelo (zoom + giro) e aguarda a conclusão.
+    /// Cada linha de ganho é um grupo independente chamado sequencialmente.
+    /// </summary>
+    private async UniTask AnimateCellGroupAsync(List<(int col, int row)> group)
+    {
+        var pending = new List<UniTaskCompletionSource>();
+
+        foreach (var (col, row) in group)
+        {
+            if (col < 0 || col >= _reels.Length) continue;
+            var instance = _reels[col]?.GetResultInstance(row);
+            if (instance == null) continue;
+
+            // Funciona com Transform (sprites) e RectTransform (canvas UI)
+            var tr  = instance.transform;
+            var tcs = new UniTaskCompletionSource();
+            pending.Add(tcs);
+
+            // zoom in → gira esq → gira dir → volta ao normal (~0.52 s por grupo)
+            DOTween.Sequence()
+                .Append(tr.DOScale(Vector3.one * 1.15f, 0.12f).SetEase(Ease.OutQuad))
+                .Append(tr.DOLocalRotate(new Vector3(0f, 0f, -8f), 0.10f).SetEase(Ease.OutQuad))
+                .Append(tr.DOLocalRotate(new Vector3(0f, 0f,  8f), 0.20f).SetEase(Ease.InOutQuad))
+                .Append(tr.DOLocalRotate(Vector3.zero,             0.10f).SetEase(Ease.InQuad))
+                .Join  (tr.DOScale(Vector3.one,                    0.10f).SetEase(Ease.InQuad))
+                .OnComplete(() => tcs.TrySetResult())
+                .OnKill   (() => tcs.TrySetResult());
+        }
+
+        if (pending.Count > 0)
+        {
+            var waitAll = new UniTask[pending.Count];
+            for (int i = 0; i < pending.Count; i++) waitAll[i] = pending[i].Task;
+            await UniTask.WhenAll(waitAll);
+        }
+    }
+
+    // ── Debug ─────────────────────────────────────────────────────────────────
+
+    private static void LogGrid(int[][] grid)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("[SlotMachineView] Grid do spin (col→ / row↓):");
+        int rows = grid[0].Length;
+        for (int row = 0; row < rows; row++)
+        {
+            sb.Append($"  row {row}:");
+            for (int col = 0; col < grid.Length; col++)
+                sb.Append($"  {grid[col][row],2}");
+            sb.AppendLine();
+        }
+        Debug.Log(sb.ToString());
     }
 }
