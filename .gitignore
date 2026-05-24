@@ -68,6 +68,10 @@ pnpm-debug.log*
 .env
 .env.*.local
 
+# config de ambiente do Unity (app.env + meta gerado pelo Unity)
+slot-dogs-unity/Assets/Resources/app.env
+slot-dogs-unity/Assets/Resources/app.env.meta
+
 # outputs / caches
 dist/
 build/
