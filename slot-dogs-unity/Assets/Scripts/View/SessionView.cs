@@ -32,7 +32,7 @@ public class SessionView : MonoBehaviour, ISessionView
     // ── Botões ────────────────────────────────────────────────────────────────
 
     [Header("Botões")]
-    [SerializeField] private Button _spinButton;
+
     [SerializeField] private Button _rotateSeedButton;
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -51,7 +51,6 @@ public class SessionView : MonoBehaviour, ISessionView
         SessionPresenter.Instance.SetView(this);
 
         // Conecta botões
-        _spinButton?.onClick.AddListener(OnSpinClicked);
         _rotateSeedButton?.onClick.AddListener(OnRotateSeedClicked);
     }
 
@@ -60,7 +59,6 @@ public class SessionView : MonoBehaviour, ISessionView
         // Remove registro para evitar referência nula em cenas futuras
         SessionPresenter.Instance?.ClearView();
 
-        _spinButton?.onClick.RemoveListener(OnSpinClicked);
         _rotateSeedButton?.onClick.RemoveListener(OnRotateSeedClicked);
     }
 
@@ -68,19 +66,9 @@ public class SessionView : MonoBehaviour, ISessionView
     //  Handlers de botão
     // ═════════════════════════════════════════════════════════════════════════
 
-    private void OnSpinClicked()
-    {
-        SpinAsync().Forget();
-    }
-
     private void OnRotateSeedClicked()
     {
         RotateSeedAsync().Forget();
-    }
-
-    private async UniTaskVoid SpinAsync()
-    {
-        await SessionPresenter.Instance.RequestSpinAsync();
     }
 
     private async UniTaskVoid RotateSeedAsync()
@@ -96,8 +84,7 @@ public class SessionView : MonoBehaviour, ISessionView
     {
         SetLoading(isLoading);
 
-        // Desabilita botões durante operações assíncronas
-        if (_spinButton != null) _spinButton.interactable = !isLoading;
+        // Desabilita o botão de auditoria durante operações assíncronas
         if (_rotateSeedButton != null) _rotateSeedButton.interactable = !isLoading;
     }
 

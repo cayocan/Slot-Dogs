@@ -82,8 +82,8 @@ public class RotateResponse
 public class SpinRequest
 {
     public string sessionId;
-    /// <summary>Opcional — se omitido usa betPerLine da sessão.</summary>
-    public int betPerLine;
+    /// <summary>Opcional — null omite o campo do JSON e o backend usa o betPerLine da sessão.</summary>
+    public int? betPerLine;
 }
 
 /// <summary>Vitória em uma payline individual.</summary>

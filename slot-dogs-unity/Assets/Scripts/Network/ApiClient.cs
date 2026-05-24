@@ -99,7 +99,7 @@ public class ApiClient
         var body = new SpinRequest
         {
             sessionId  = sessionId,
-            betPerLine = betPerLine,
+            betPerLine = betPerLine > 0 ? betPerLine : (int?)null,
         };
         return await PostAsync<SpinResponse>("/spin", body, ct: ct);
     }
