@@ -203,9 +203,11 @@ public class ReelStrip : MonoBehaviour
         var container = _slotContainers[containerIdx];
         if (container == null) return;
 
-        // Remove instância anterior
+        // Remove instância anterior — SetActive(false) oculta imediatamente;
+        // Destroy() é diferido mas o objeto já não renderiza no mesmo frame.
         if (_instances != null && containerIdx < _instances.Length && _instances[containerIdx] != null)
         {
+            _instances[containerIdx].SetActive(false);
             Destroy(_instances[containerIdx]);
             _instances[containerIdx] = null;
         }
