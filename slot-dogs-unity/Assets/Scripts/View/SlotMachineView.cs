@@ -43,11 +43,24 @@ public class SlotMachineView : MonoBehaviour
 
     [Header("Botões")]
     [SerializeField] private Button _spinButton;
+    [SerializeField] private Button _betIncreaseButton;
+    [SerializeField] private Button _betDecreaseButton;
+
+    // ── Controle de aposta ──────────────────────────────────────────────────
+
+    [Header("Aposta por Linha")]
+    [SerializeField] private TMP_Text _betPerLineText;
 
     // ── Eventos (consumidos pelo SlotMachinePresenter) ────────────────────────
 
     /// <summary>Disparado quando o jogador clica no botão Spin.</summary>
     public event Action OnSpinRequested;
+
+    /// <summary>Disparado quando o jogador clica em "+" no bet.</summary>
+    public event Action OnBetIncreaseRequested;
+
+    /// <summary>Disparado quando o jogador clica em "-" no bet.</summary>
+    public event Action OnBetDecreaseRequested;
 
     // ═════════════════════════════════════════════════════════════════════════
     //  Ciclo de vida Unity
@@ -57,11 +70,15 @@ public class SlotMachineView : MonoBehaviour
     {
         Clear();
         _spinButton?.onClick.AddListener(() => OnSpinRequested?.Invoke());
+        _betIncreaseButton?.onClick.AddListener(() => OnBetIncreaseRequested?.Invoke());
+        _betDecreaseButton?.onClick.AddListener(() => OnBetDecreaseRequested?.Invoke());
     }
 
     private void OnDestroy()
     {
         _spinButton?.onClick.RemoveAllListeners();
+        _betIncreaseButton?.onClick.RemoveAllListeners();
+        _betDecreaseButton?.onClick.RemoveAllListeners();
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -84,6 +101,19 @@ public class SlotMachineView : MonoBehaviour
     {
         if (_coinsText != null)
             _coinsText.text = $"Coins: {coins:N0}";
+    }
+
+    /// <summary>Atualiza o display de aposta por linha e os botões +/−.</summary>
+    public void UpdateBetPerLine(int bet, int minBet, int maxBet)
+    {
+        if (_betPerLineText != null)
+            _betPerLineText.text = $"Bet: {bet}";
+
+        if (_betDecreaseButton != null)
+            _betDecreaseButton.interactable = bet > minBet;
+
+        if (_betIncreaseButton != null)
+            _betIncreaseButton.interactable = bet < maxBet;
     }
 
     /// <summary>Atualiza o display de free spins (oculta quando zero).</summary>
