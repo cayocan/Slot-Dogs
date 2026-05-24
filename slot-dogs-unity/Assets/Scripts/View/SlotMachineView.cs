@@ -1,10 +1,11 @@
 using System;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  Slot Dogs — SlotMachineView (estático, sem animação)
+//  Slot Dogs — SlotMachineView
 //  Responsabilidades exclusivas de UI:
 //    • Exibir o grid 5×3 de símbolos
 //    • Exibir totalWin, winLevel, coins, freeSpins
@@ -20,11 +21,15 @@ using UnityEngine.UI;
 
 public class SlotMachineView : MonoBehaviour
 {
-    // ── Grid ──────────────────────────────────────────────────────────────────
+    // ── Grid de Reels ──────────────────────────────────────────────────────────
 
-    [Header("Grid de Símbolos  (5 colunas × 3 linhas = 15 cells)")]
-    [Tooltip("Ordem: col0-row0, col0-row1, col0-row2, col1-row0 … col4-row2")]
-    [SerializeField] private TMP_Text[] _cells; // deve ter exatamente 15 elementos
+    [Header("Grid  (5 Reels)")]
+    [Tooltip("Um ReelStrip por coluna, da esquerda para a direita")]
+    [SerializeField] private ReelStrip[] _reels;   // deve ter exatamente 5 elementos
+
+    [Header("Biblioteca de Símbolos")]
+    [Tooltip("Asset SymbolLibrary com o mapeamento symbolId → prefab")]
+    [SerializeField] private SymbolLibrary _symbolLibrary;
 
     // ── Win info ──────────────────────────────────────────────────────────────
 
@@ -51,6 +56,12 @@ public class SlotMachineView : MonoBehaviour
     [Header("Aposta por Linha")]
     [SerializeField] private TMP_Text _betPerLineText;
 
+    // ── Delay escalonado entre reels ──────────────────────────────────────────
+
+    [Header("Animação de Giro")]
+    [Tooltip("Delay em ms entre a parada de cada reel (esq→dir)")]
+    [SerializeField] private int _reelStopDelayMs = 300;
+
     // ── Eventos (consumidos pelo SlotMachinePresenter) ────────────────────────
 
     /// <summary>Disparado quando o jogador clica no botão Spin.</summary>
@@ -68,7 +79,11 @@ public class SlotMachineView : MonoBehaviour
 
     private void Awake()
     {
-        Clear();
+        // Injeta a SymbolLibrary em cada reel antes de qualquer Init
+        if (_reels != null && _symbolLibrary != null)
+            foreach (var reel in _reels)
+                reel?.Init(_symbolLibrary);
+
         _spinButton?.onClick.AddListener(() => OnSpinRequested?.Invoke());
         _betIncreaseButton?.onClick.AddListener(() => OnBetIncreaseRequested?.Invoke());
         _betDecreaseButton?.onClick.AddListener(() => OnBetDecreaseRequested?.Invoke());
@@ -76,6 +91,10 @@ public class SlotMachineView : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_reels != null)
+            foreach (var reel in _reels)
+                reel?.KillSpin();
+
         _spinButton?.onClick.RemoveAllListeners();
         _betIncreaseButton?.onClick.RemoveAllListeners();
         _betDecreaseButton?.onClick.RemoveAllListeners();
@@ -84,17 +103,6 @@ public class SlotMachineView : MonoBehaviour
     // ═════════════════════════════════════════════════════════════════════════
     //  API pública — chamada pelo SlotMachinePresenter
     // ═════════════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Popula o grid com os símbolos do spin e exibe o painel de vitória se houver ganho.
-    /// </summary>
-    public void Populate(SpinResponse result)
-    {
-        if (result?.spin == null) return;
-
-        PopulateGrid(result.spin.grid);
-        ShowWinInfo(result.spin.totalWin, result.spin.winLevel);
-    }
 
     /// <summary>Atualiza o display de moedas.</summary>
     public void UpdateCoins(int coins)
@@ -132,12 +140,12 @@ public class SlotMachineView : MonoBehaviour
             _spinButton.interactable = interactable;
     }
 
-    /// <summary>Reseta todos os cells para "—" e oculta o painel de vitória.</summary>
+    /// <summary>Limpa o painel de vitória e exibe Blank em todos os reels.</summary>
     public void Clear()
     {
-        if (_cells != null)
-            foreach (var cell in _cells)
-                if (cell != null) cell.text = "—";
+        if (_reels != null)
+            foreach (var reel in _reels)
+                reel?.ShowBlank();
 
         SetWinPanelVisible(false);
     }
@@ -145,26 +153,6 @@ public class SlotMachineView : MonoBehaviour
     // ═════════════════════════════════════════════════════════════════════════
     //  Internos
     // ═════════════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Escreve os nomes dos símbolos nos TMP_Text do grid.
-    /// grid[col][row]: col = índice do reel (0-4), row = linha (0-2, topo→base).
-    /// </summary>
-    private void PopulateGrid(int[][] grid)
-    {
-        if (_cells == null || grid == null) return;
-
-        for (int col = 0; col < 5 && col < grid.Length; col++)
-        {
-            for (int row = 0; row < 3 && row < grid[col].Length; row++)
-            {
-                int idx = col * 3 + row;
-                if (idx >= _cells.Length || _cells[idx] == null) continue;
-
-                _cells[idx].text = SymbolLabel(grid[col][row]);
-            }
-        }
-    }
 
     private void ShowWinInfo(int totalWin, string winLevel)
     {
@@ -184,19 +172,40 @@ public class SlotMachineView : MonoBehaviour
             _winInfoPanel.SetActive(visible);
     }
 
-    // ── Mapeamento symbolId → label ───────────────────────────────────────────
+    // ── Animação ──────────────────────────────────────────────────────────────
 
-    private static string SymbolLabel(int id) => id switch
+    /// <summary>Inicia o giro em todos os reels simultaneamente.</summary>
+    public void StartSpinVisual()
     {
-        SymbolId.Husky     => "HUSKY",
-        SymbolId.Golden    => "GOLDEN",
-        SymbolId.Shiba     => "SHIBA",
-        SymbolId.Pug       => "PUG",
-        SymbolId.Beagle    => "BEAGLE",
-        SymbolId.Dachshund => "DACHSH",
-        SymbolId.Wild      => "★WILD★",
-        SymbolId.Scatter   => "◆SCAT◆",
-        SymbolId.Blank     => "—",
-        _                  => $"?{id}",
-    };
+        SetWinPanelVisible(false);
+        if (_reels == null) return;
+        foreach (var reel in _reels)
+            reel?.StartSpin();
+    }
+
+    /// <summary>
+    /// Para os reels esquerda→direita com delay escalonado e exibe o resultado.
+    /// </summary>
+    public async UniTask StopSpinVisualAsync(SpinResponse result)
+    {
+        if (result?.spin?.grid == null || _reels == null) return;
+
+        var tasks = new UniTask[_reels.Length];
+        for (int col = 0; col < _reels.Length; col++)
+        {
+            var reel    = _reels[col];
+            var symbols = col < result.spin.grid.Length ? result.spin.grid[col] : new int[3];
+            tasks[col]  = StopReelAsync(reel, symbols, col * _reelStopDelayMs);
+        }
+
+        await UniTask.WhenAll(tasks);
+        ShowWinInfo(result.spin.totalWin, result.spin.winLevel);
+    }
+
+    private static async UniTask StopReelAsync(ReelStrip reel, int[] symbols, int delayMs)
+    {
+        if (reel == null) return;
+        if (delayMs > 0) await UniTask.Delay(delayMs);
+        await reel.StopSpinAsync(symbols);
+    }
 }

@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d80e1f47e9db2e84d9ea8fbfcc88115b, type: 3}
+  m_Name: SymbolLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::SymbolLibrary
+  _entries:
+  - symbolId: 0
+    displayName: Husky
+    prefab: {fileID: 7047954853387452219, guid: 22ea99ecc48b08a46ad113be162e6dc2, type: 3}
+  - symbolId: 1
+    displayName: Golden
+    prefab: {fileID: 7047954853387452219, guid: 188b11861960958499b51d065ac3812c, type: 3}
+  - symbolId: 2
+    displayName: Shiba
+    prefab: {fileID: 7047954853387452219, guid: e1cb00a7483511c41827e0b5e1e11a8e, type: 3}
+  - symbolId: 3
+    displayName: Pug
+    prefab: {fileID: 7047954853387452219, guid: 580c4bc01821a0c43ae77f84dbb24408, type: 3}
+  - symbolId: 4
+    displayName: Beagle
+    prefab: {fileID: 7047954853387452219, guid: cd948f119d8be574187977650bb81090, type: 3}
+  - symbolId: 5
+    displayName: Dachshund
+    prefab: {fileID: 7047954853387452219, guid: 745833bb55ec1054cab0550ee5f065fc, type: 3}
+  - symbolId: 6
+    displayName: Wild
+    prefab: {fileID: 7047954853387452219, guid: 624acaa2994c7f44e97a2386334382c9, type: 3}
+  - symbolId: 7
+    displayName: Scatter
+    prefab: {fileID: 7047954853387452219, guid: d9f918d95cb867041bf038b7b441e9dc, type: 3}
+  - symbolId: 8
+    displayName: Blank
+    prefab: {fileID: 7047954853387452219, guid: 80a7b25954fe4f24f99a8e691c3f9ae1, type: 3}

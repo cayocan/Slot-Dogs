@@ -26,8 +26,10 @@ public class SlotMachinePresenter : MonoBehaviour
 
     [SerializeField] private int _minBet = 1;
     [SerializeField] private int _maxBet = 100;
+    [SerializeField] private float _minSpinDuration = 1.5f;
 
-    private int _betPerLine;
+    private int  _betPerLine;
+    private bool _isSpinning;
 
     // ═════════════════════════════════════════════════════════════════════════
     //  Ciclo de vida Unity
@@ -50,7 +52,6 @@ public class SlotMachinePresenter : MonoBehaviour
 
         // Model → Presenter → View
         var model = sp.Model;
-        model.OnSpinCompleted += OnSpinCompleted;
         model.OnCoinsChanged  += OnCoinsChanged;
 
         // Estado inicial
@@ -73,7 +74,6 @@ public class SlotMachinePresenter : MonoBehaviour
         var model = SessionPresenter.Instance?.Model;
         if (model != null)
         {
-            model.OnSpinCompleted -= OnSpinCompleted;
             model.OnCoinsChanged  -= OnCoinsChanged;
         }
     }
@@ -89,13 +89,35 @@ public class SlotMachinePresenter : MonoBehaviour
 
     private async UniTaskVoid SpinAsync()
     {
+        _isSpinning = true;
         _view.SetSpinInteractable(false);
-        await SessionPresenter.Instance.RequestSpinAsync(_betPerLine);
-        RefreshSpinButton(SessionPresenter.Instance.Model);
+        _view.StartSpinVisual();
+
+        try
+        {
+            // Chama API e garante duração mínima de animação em paralelo
+            await UniTask.WhenAll(
+                SessionPresenter.Instance.RequestSpinAsync(_betPerLine),
+                UniTask.Delay((int)(_minSpinDuration * 1000f))
+            );
+
+            var model = SessionPresenter.Instance.Model;
+            if (model.LastSpin != null)
+            {
+                await _view.StopSpinVisualAsync(model.LastSpin);
+                _view.UpdateFreeSpins(model.FreeSpinsRemaining);
+            }
+        }
+        finally
+        {
+            _isSpinning = false;
+            RefreshSpinButton(SessionPresenter.Instance.Model);
+        }
     }
 
     private void OnBetIncrease()
     {
+        if (_isSpinning) return;
         _betPerLine = Mathf.Min(_betPerLine + 1, _maxBet);
         _view.UpdateBetPerLine(_betPerLine, _minBet, _maxBet);
         RefreshSpinButton(SessionPresenter.Instance.Model);
@@ -103,23 +125,17 @@ public class SlotMachinePresenter : MonoBehaviour
 
     private void OnBetDecrease()
     {
+        if (_isSpinning) return;
         _betPerLine = Mathf.Max(_betPerLine - 1, _minBet);
         _view.UpdateBetPerLine(_betPerLine, _minBet, _maxBet);
         RefreshSpinButton(SessionPresenter.Instance.Model);
     }
 
-    private void OnSpinCompleted(SpinResponse result)
-    {
-        _view.Populate(result);
-
-        if (result?.session != null)
-            _view.UpdateFreeSpins(result.session.freeSpinsRemaining);
-    }
-
     private void OnCoinsChanged(int coins)
     {
         _view.UpdateCoins(coins);
-        RefreshSpinButton(SessionPresenter.Instance.Model);
+        if (!_isSpinning)
+            RefreshSpinButton(SessionPresenter.Instance.Model);
     }
 
     // ── Utilitário ────────────────────────────────────────────────────────────
