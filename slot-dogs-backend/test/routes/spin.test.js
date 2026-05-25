@@ -132,7 +132,7 @@ describe('POST /spin — resposta válida', () => {
     for (const f of required) assert.ok(f in spin, `Campo ausente no spin: ${f}`);
   });
 
-  test('totalBet = betPerLine × 15', async () => {
+  test('totalBet = betPerLine × 12', async () => {
     const sess = await createReadySession();
     const res = await app.inject({
       method: 'POST',
@@ -140,7 +140,7 @@ describe('POST /spin — resposta válida', () => {
       headers: { 'content-type': 'application/json' },
       payload: { sessionId: sess.sessionId, betPerLine: 3 },
     });
-    assert.equal(res.json().spin.totalBet, 45);
+    assert.equal(res.json().spin.totalBet, 36);
   });
 
   test('coins nunca diminuem (ENABLE_COST desativado)', async () => {
@@ -198,7 +198,7 @@ describe('POST /spin — resposta válida', () => {
       headers: { 'content-type': 'application/json' },
       payload: { sessionId: sess.sessionId }, // betPerLine omitido
     });
-    assert.equal(res.json().spin.totalBet, 15); // 1 × 15
+    assert.equal(res.json().spin.totalBet, 12); // 1 × 12
   });
 
   test('freeSpinsRemaining incrementa quando scatter dispara free spins', async () => {

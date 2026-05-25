@@ -53,8 +53,8 @@ describe('config — paytable', () => {
 });
 
 describe('config — paylines', () => {
-  test('existem exatamente 15 paylines', () => {
-    assert.equal(PAYLINES.length, 15);
+  test('existem exatamente 12 paylines', () => {
+    assert.equal(PAYLINES.length, 12);
   });
 
   test('cada payline tem exatamente 5 colunas', () => {

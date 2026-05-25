@@ -59,7 +59,7 @@ describe('buildWindow', () => {
 
 // ─── evaluateLines ────────────────────────────────────────────────────────────
 describe('evaluateLines', () => {
-  test('5-in-a-row Dachshund na linha do meio → multiplier 40', () => {
+  test('5-in-a-row Dachshund na linha do meio → multiplier correto', () => {
     // Linha do meio (payline 1, path=[1,1,1,1,1]): todos os reels têm Dachshund na row 1
     const grid = middleGrid(DACHSHUND);
     const { lineWins, lineWinTotal } = evaluateLines(grid, 1);
@@ -67,9 +67,9 @@ describe('evaluateLines', () => {
     assert.ok(win, 'Payline 1 deve ter win');
     assert.equal(win.symbolId, DACHSHUND);
     assert.equal(win.count, 5);
-    assert.equal(win.multiplier, PAYTABLE[DACHSHUND][2]); // 40
-    assert.equal(win.coins, 40);
-    assert.ok(lineWinTotal >= 40);
+    assert.equal(win.multiplier, PAYTABLE[DACHSHUND][2]);
+    assert.equal(win.coins, PAYTABLE[DACHSHUND][2]);
+    assert.ok(lineWinTotal >= PAYTABLE[DACHSHUND][2]);
   });
 
   test('3-in-a-row Dachshund + WILD na col 1 → sequência de 3 contando WILD', () => {
@@ -204,9 +204,9 @@ describe('evaluateSpin', () => {
       assert.ok(field in result, `Campo ausente: ${field}`);
   });
 
-  test('totalBet = betPerLine × 15 linhas', () => {
-    assert.equal(evaluateSpin([0, 0, 0, 0, 0], 1).totalBet, 15);
-    assert.equal(evaluateSpin([0, 0, 0, 0, 0], 3).totalBet, 45);
+  test('totalBet = betPerLine × 12 linhas', () => {
+    assert.equal(evaluateSpin([0, 0, 0, 0, 0], 1).totalBet, 12);
+    assert.equal(evaluateSpin([0, 0, 0, 0, 0], 3).totalBet, 36);
   });
 
   test('stopPositions no resultado coincidem com o input', () => {
@@ -259,8 +259,8 @@ describe('evaluateSpin', () => {
     assert.equal(sc, 5);
     // scatterCoins = SCATTER_MULTIPLIERS[5] × totalBet
     const { SCATTER_MULTIPLIERS } = require('../../src/engine/config');
-    const expected = SCATTER_MULTIPLIERS[5] * (1 * PAYLINES.length); // 20 × 15 = 300
+    const expected = SCATTER_MULTIPLIERS[5] * (1 * PAYLINES.length); // 20 × 12 = 240
     // Verificar a fórmula diretamente (não via evaluateSpin pois não controlamos stops)
-    assert.equal(expected, 300);
+    assert.equal(expected, 240);
   });
 });

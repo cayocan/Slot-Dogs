@@ -17,13 +17,13 @@ after(async () => {
 
 // ─── POST /session ─────────────────────────────────────────────────────────────
 describe('POST /session', () => {
-  test('retorna 201 com serverSeedHash e coins=100', async () => {
+  test('retorna 201 com serverSeedHash e coins=500', async () => {
     const res = await app.inject({ method: 'POST', url: '/session' });
     assert.equal(res.statusCode, 201);
     const body = res.json();
     assert.ok(body.sessionId, 'deve ter sessionId');
     assert.ok(body.serverSeedHash, 'deve ter serverSeedHash');
-    assert.equal(body.coins, 100);
+    assert.equal(body.coins, 500);
     assert.equal(body.betPerLine, 1);
   });
 
@@ -88,7 +88,7 @@ describe('GET /session/:id', () => {
     const res = await app.inject({ method: 'GET', url: `/session/${sess.sessionId}` });
     assert.equal(res.statusCode, 200);
     const body = res.json();
-    assert.equal(body.coins, 100);
+    assert.equal(body.coins, 500);
     assert.equal(body.nonce, 0);
     assert.ok(!('serverSeed' in body), 'serverSeed não deve aparecer');
   });

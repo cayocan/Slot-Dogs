@@ -10,7 +10,7 @@ describe('createSession', () => {
     const s = pf.createSession();
     assert.ok(s.sessionId, 'deve ter sessionId');
     assert.ok(s.serverSeedHash, 'deve ter serverSeedHash');
-    assert.equal(s.coins, 100);
+    assert.equal(s.coins, 500);
     assert.equal(s.betPerLine, 1);
   });
 
@@ -62,7 +62,7 @@ describe('getSession', () => {
     const { sessionId } = pf.createSession();
     const sess = pf.getSession(sessionId);
     assert.ok(!('serverSeed' in sess), 'serverSeed não deve aparecer no getSession');
-    assert.equal(sess.coins, 100);
+    assert.equal(sess.coins, 500);
     assert.equal(sess.nonce, 0);
     assert.equal(sess.freeSpinsRemaining, 0);
   });
