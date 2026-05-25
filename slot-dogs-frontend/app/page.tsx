@@ -6,15 +6,38 @@ import VerifyPanel from '@/components/VerifyPanel';
 
 const GAME_URL = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_GAME_URL) || '/game/index.html';
 
+interface SlotSessionMessage {
+  type: 'slot-session';
+  sessionId: string;
+  serverSeedHash: string;
+  clientSeed: string;
+  nonce: number;
+  coins: number;
+  freeSpinsRemaining: number;
+}
+
 export default function Home() {
-  const [, setSessionId] = useState<string | null>(null);
   const [gameReady, setGameReady] = useState<boolean | null>(null); // null = checando
+  const [liveSessionId, setLiveSessionId] = useState<string | null>(null);
+  const [liveClientSeed, setLiveClientSeed] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/game-status')
       .then((r) => r.json())
       .then((d) => setGameReady(d.ready))
       .catch(() => setGameReady(false));
+  }, []);
+
+  // Escuta mensagens postMessage enviadas pelo Unity WebGL (SlotBridge.cs)
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      const data = e.data as SlotSessionMessage;
+      if (!data || data.type !== 'slot-session') return;
+      if (data.sessionId) setLiveSessionId(data.sessionId);
+      if (data.clientSeed) setLiveClientSeed(data.clientSeed);
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
   }, []);
 
   return (
@@ -72,8 +95,8 @@ export default function Home() {
       {/* ── Sidebar ── */}
       <aside className="w-80 shrink-0 border-l border-zinc-800 flex flex-col overflow-y-auto">
         <div className="p-4 space-y-4">
-          <SessionPanel onSessionChange={setSessionId} />
-          <VerifyPanel />
+          <SessionPanel liveSessionId={liveSessionId} />
+          <VerifyPanel prefillClientSeed={liveClientSeed} />
         </div>
       </aside>
     </div>

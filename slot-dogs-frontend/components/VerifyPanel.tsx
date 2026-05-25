@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { verifySpin, VerifyResult } from '@/lib/api';
 
-export default function VerifyPanel() {
+interface Props {
+  /** Client seed pré-preenchido a partir da sessão ativa no jogo */
+  prefillClientSeed?: string | null;
+}
+
+export default function VerifyPanel({ prefillClientSeed }: Props) {
   const [serverSeed, setServerSeed] = useState('');
   const [clientSeed, setClientSeed] = useState('');
   const [nonce, setNonce] = useState('');
@@ -11,6 +16,15 @@ export default function VerifyPanel() {
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clientSeedFromGame, setClientSeedFromGame] = useState(false);
+
+  // Pré-preenche o client seed quando chega do jogo Unity
+  useEffect(() => {
+    if (prefillClientSeed) {
+      setClientSeed(prefillClientSeed);
+      setClientSeedFromGame(true);
+    }
+  }, [prefillClientSeed]);
 
   const updateStop = (i: number, val: string) => {
     setStops((prev) => { const next = [...prev]; next[i] = val; return next; });
@@ -59,9 +73,18 @@ export default function VerifyPanel() {
           mono
         />
         <Input
-          label="Client Seed"
+          label={
+            <span className="flex items-center gap-1.5">
+              Client Seed
+              {clientSeedFromGame && (
+                <span className="text-[9px] bg-green-900 text-green-400 px-1 py-0.5 rounded font-mono normal-case tracking-normal">
+                  🎮 jogo ativo
+                </span>
+              )}
+            </span>
+          }
           value={clientSeed}
-          onChange={setClientSeed}
+          onChange={(v) => { setClientSeed(v); setClientSeedFromGame(false); }}
           placeholder="seed usado na sessão"
           mono
         />
@@ -132,7 +155,7 @@ function Input({
   mono = false,
   type = 'text',
 }: {
-  label: string;
+  label: React.ReactNode;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;

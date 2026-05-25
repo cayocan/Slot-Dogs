@@ -5,9 +5,11 @@ import { createSession, getSession, SessionState } from '@/lib/api';
 
 interface Props {
   onSessionChange?: (sessionId: string) => void;
+  /** Session ID enviado pelo Unity via postMessage — auto-carrega a sessão */
+  liveSessionId?: string | null;
 }
 
-export default function SessionPanel({ onSessionChange }: Props) {
+export default function SessionPanel({ onSessionChange, liveSessionId }: Props) {
   const [session, setSession] = useState<SessionState | null>(null);
   const [sessionIdInput, setSessionIdInput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +64,14 @@ export default function SessionPanel({ onSessionChange }: Props) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
 
+  // Auto-carrega a sessão quando o Unity envia o ID via postMessage
+  useEffect(() => {
+    if (liveSessionId && liveSessionId !== session?.sessionId) {
+      loadSession(liveSessionId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveSessionId]);
+
   const refresh = () => { if (session) loadSession(session.sessionId); };
 
   return (
@@ -70,11 +80,18 @@ export default function SessionPanel({ onSessionChange }: Props) {
         <h2 className="text-sm font-semibold uppercase tracking-widest text-amber-400">
           Sessão
         </h2>
-        {session && (
-          <button onClick={refresh} title="Atualizar" className="text-zinc-400 hover:text-white text-xs">
-            ↻
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {liveSessionId && session?.sessionId === liveSessionId && (
+            <span className="text-[10px] bg-green-900 text-green-400 px-1.5 py-0.5 rounded font-mono">
+              🎮 jogo ativo
+            </span>
+          )}
+          {session && (
+            <button onClick={refresh} title="Atualizar" className="text-zinc-400 hover:text-white text-xs">
+              ↻
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Criar ou buscar sessão */}

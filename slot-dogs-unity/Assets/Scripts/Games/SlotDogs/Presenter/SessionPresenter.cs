@@ -117,6 +117,7 @@ public class SessionPresenter : MonoBehaviour, ISpinProvider
                 Debug.LogWarning($"[SessionPresenter] Client seed rejeitado pelo backend: {seedResponse.error}");
 
             RefreshView();
+            SlotBridge.BroadcastSession(_model);
             return true;
         }
         catch (ApiException ex)
@@ -155,6 +156,7 @@ public class SessionPresenter : MonoBehaviour, ISpinProvider
             var response = await _api.SpinAsync(_model.SessionId, betPerLine, linked.Token);
             _model.ApplySpin(response);
             // OnSpinCompleted e OnCoinsChanged disparam a view automaticamente via eventos
+            SlotBridge.BroadcastSession(_model);
             return true;
         }
         catch (ApiException ex)
