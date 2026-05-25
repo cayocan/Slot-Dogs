@@ -129,22 +129,21 @@
     .divider { width: 3rem; height: 2px; background: var(--gold); margin: .6rem 0 2rem; border-radius: 1px; }
 
     /* ── Game ── */
-    #jogo { max-width: 1100px; padding-top: 3rem; padding-bottom: 3rem; }
+    #jogo { max-width: 1100px; padding-top: 1.5rem; padding-bottom: 2rem; }
     .game-frame-wrap {
-      position: relative;
       width: 100%;
-      padding-top: 56.25%; /* 16:9 */
+      aspect-ratio: 16 / 9;
+      max-height: calc(100vh - 110px);
       border-radius: 12px;
       overflow: hidden;
       border: 1px solid var(--border);
       box-shadow: 0 0 60px rgba(245,184,0,.07);
     }
     .game-frame-wrap iframe {
-      position: absolute;
-      inset: 0;
       width: 100%;
       height: 100%;
       border: none;
+      display: block;
     }
 
     /* ── Stat cards ── */
@@ -309,7 +308,7 @@
 <!-- ══════════════ HEADER ══════════════ -->
 <header>
   <div class="logo">🐕 Slot Dogs</div>
-  <p class="tagline">Provably Fair · Open Source · 5 Reels · 12 Paylines</p>
+  <p class="tagline">Provably Fair · Open Source · 5 Reels · 13 Paylines</p>
   <div class="badges">
     <span class="badge">RTP 98.17%</span>
     <span class="badge">HMAC-SHA256</span>
@@ -624,7 +623,7 @@
           <td style="text-align:center"><span style="color:var(--purple);font-weight:700;">2× TB</span></td>
           <td style="text-align:center"><span style="color:var(--purple);font-weight:700;">5× TB</span></td>
           <td style="text-align:center"><span style="color:var(--purple);font-weight:800;font-size:1rem;">20× TB</span></td>
-          <td class="muted">TB = aposta total (bet × 12). 3+ scatters triggam <strong style="color:var(--purple)">8 free spins</strong>.</td>
+          <td class="muted">TB = aposta total (bet × 13). <strong style="color:var(--purple)">2 scatters = 1× TB</strong> (sem free spins). 3+ triggam <strong style="color:var(--purple)">8 free spins</strong>. Aparece em qualquer posição.</td>
         </tr>
       </tbody>
     </table>
@@ -635,7 +634,7 @@
 <!-- ══════════════ PAYLINES ══════════════ -->
 <section id="paylines">
   <div class="section-title">Linhas de Pagamento</div>
-  <div class="section-subtitle">12 paylines ativas. Células douradas indicam a posição coberta por cada linha (3 linhas × 5 reels).</div>
+  <div class="section-subtitle">13 paylines ativas. Células douradas indicam a posição coberta por cada linha (3 linhas × 5 reels).</div>
   <div class="divider"></div>
 
   <div class="paylines-list">
@@ -652,6 +651,7 @@
     <div class="payline-card" id="pl10"></div>
     <div class="payline-card" id="pl11"></div>
     <div class="payline-card" id="pl12"></div>
+    <div class="payline-card" id="pl13"></div>
   </div>
 
   <script>
@@ -667,7 +667,8 @@
       { id:'pl9',  name:'Escada ↗',        path:[2,1,1,0,0] },
       { id:'pl10', name:'Onda suave ↘',    path:[0,1,1,1,2] },
       { id:'pl11', name:'Onda suave ↗',    path:[2,1,1,1,0] },
-      { id:'pl12', name:'Cruzada central', path:[1,0,1,2,1] },
+      { id:'pl12', name:'Cruzada central',         path:[1,0,1,2,1] },
+      { id:'pl13', name:'Cruzada central invertida', path:[1,2,1,0,1] },
     ];
     PAYLINES.forEach(({ id, name, path }) => {
       const card = document.getElementById(id);
@@ -698,7 +699,7 @@
       <div class="rule-icon">🎰</div>
       <div>
         <div class="rule-title">Spin básico</div>
-        <div class="rule-desc">Pressione SPIN para girar os 5 reels. O custo do giro é <strong>betPerLine × 12</strong> (aposta por linha multiplicada pelas 12 paylines ativas).</div>
+        <div class="rule-desc">Pressione SPIN para girar os 5 reels. O custo do giro é <strong>betPerLine × 13</strong> (aposta por linha multiplicada pelas 13 paylines ativas).</div>
       </div>
     </div>
     <div class="rule-item">
@@ -719,7 +720,7 @@
       <div class="rule-icon">🦴</div>
       <div>
         <div class="rule-title">Scatter — Ossinho</div>
-        <div class="rule-desc">Paga em qualquer posição do grid (não precisa de payline). 3+ scatters ativam <strong>8 free spins</strong> e pagam 2×, 5× ou 20× a aposta total, respectivamente.</div>
+        <div class="rule-desc">Paga em qualquer posição do grid (não precisa de payline). <strong>2 scatters = 1× TB</strong>. 3+ scatters ativam <strong>8 free spins</strong> e pagam 2×, 5× ou 20× a aposta total, respectivamente.</div>
       </div>
     </div>
     <div class="rule-item">
@@ -734,6 +735,7 @@
       <div>
         <div class="rule-title">Provably Fair</div>
         <div class="rule-desc">Cada spin é gerado por <strong>HMAC-SHA256</strong> com server seed (comprometido antes do jogo) e client seed escolhido pelo jogador. Após o jogo é possível verificar que nenhum resultado foi adulterado. O hash do server seed ativo fica visível na sessão.</div>
+        <div style="margin-top:.6rem;display:inline-flex;align-items:center;gap:.4rem;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:6px;padding:.3rem .75rem;font-size:.72rem;color:#fbbf24;font-weight:600">⚠ Verificação pelo frontend ainda está em desenvolvimento</div>
       </div>
     </div>
   </div>
