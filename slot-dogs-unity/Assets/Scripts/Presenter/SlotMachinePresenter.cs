@@ -62,9 +62,7 @@ public class SlotMachinePresenter : MonoBehaviour
         // Estado inicial da UI
         _view.UpdateCoins(_ctx.Model.Coins);
         _view.UpdateFreeSpins(model.FreeSpinsRemaining);
-        _view.UpdateBetPerLine(_ctx.BetPerLine, _minBet, _maxBet);
-
-        _stateMachine.Transition(new IdleState(_ctx));
+        _view.UpdateBetPerLine(_ctx.BetPerLine, _minBet, _maxBet, _ctx.TotalBet);
     }
 
     private void OnDestroy()
@@ -107,7 +105,7 @@ public class SlotMachinePresenter : MonoBehaviour
     {
         if (!_stateMachine.IsIn<IdleState>()) return;
         _ctx.BetPerLine = Mathf.Min(_ctx.BetPerLine + 1, _maxBet);
-        _view.UpdateBetPerLine(_ctx.BetPerLine, _minBet, _maxBet);
+        _view.UpdateBetPerLine(_ctx.BetPerLine, _minBet, _maxBet, _ctx.TotalBet);
         _view.SetSpinInteractable(_ctx.CanSpin);
     }
 
@@ -115,7 +113,7 @@ public class SlotMachinePresenter : MonoBehaviour
     {
         if (!_stateMachine.IsIn<IdleState>()) return;
         _ctx.BetPerLine = Mathf.Max(_ctx.BetPerLine - 1, _minBet);
-        _view.UpdateBetPerLine(_ctx.BetPerLine, _minBet, _maxBet);
+        _view.UpdateBetPerLine(_ctx.BetPerLine, _minBet, _maxBet, _ctx.TotalBet);
         _view.SetSpinInteractable(_ctx.CanSpin);
     }
 

@@ -142,10 +142,10 @@ public class SlotMachineView : MonoBehaviour
     }
 
     /// <summary>Atualiza o display de aposta por linha e os botões +/−.</summary>
-    public void UpdateBetPerLine(int bet, int minBet, int maxBet)
+    public void UpdateBetPerLine(int bet, int minBet, int maxBet, int totalBet)
     {
         if (_betPerLineText != null)
-            _betPerLineText.text = $"{bet}";
+            _betPerLineText.text = $"{totalBet}";
 
         if (_betDecreaseButton != null)
             _betDecreaseButton.interactable = bet > minBet;
