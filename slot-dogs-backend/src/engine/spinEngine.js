@@ -111,9 +111,9 @@ function evaluateSpin(stopPositions, betPerLine = 1) {
 
   let winLevel = 'none';
   if (totalWin > 0) winLevel = 'small';
-  if (totalWin >= totalBet * 5) winLevel = 'big';
-  if (totalWin >= totalBet * 20) winLevel = 'mega';
-  if (totalWin >= totalBet * 50) winLevel = 'jackpot';
+  if (totalWin >= totalBet * 3)  winLevel = 'big';
+  if (totalWin >= totalBet * 10) winLevel = 'mega';
+  if (totalWin >= totalBet * 25) winLevel = 'jackpot';
 
   return {
     stopPositions,
