@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slot Dogs — Provably Fair Slot Machine</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:    #f5b800;
+      --gold-lt: #ffd700;
+      --bg:      #080810;
+      --card:    #0f0f1a;
+      --card2:   #14142000;
+      --border:  #1e1e30;
+      --text:    #e8e8f0;
+      --muted:   #666680;
+      --green:   #4ade80;
+      --blue:    #60a5fa;
+      --purple:  #c084fc;
+      --red:     #f87171;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0a0a16 0%, #12102a 60%, #0a0a16 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(245,184,0,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .logo {
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--gold-lt), var(--gold), #c88800);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    .tagline {
+      margin-top: .6rem;
+      color: var(--muted);
+      font-size: .85rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .badges {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: 1.2rem;
+    }
+    .badge {
+      background: rgba(245,184,0,.1);
+      border: 1px solid rgba(245,184,0,.25);
+      color: var(--gold);
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .25rem .75rem;
+      border-radius: 999px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,8,16,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: .25rem;
+      padding: .5rem 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: .4rem .9rem;
+      border-radius: 6px;
+      transition: color .2s, background .2s;
+    }
+    nav a:hover { color: var(--gold); background: rgba(245,184,0,.08); }
+
+    /* ── Sections ── */
+    section { padding: 4rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .4rem;
+    }
+    .section-subtitle {
+      color: var(--muted);
+      font-size: .85rem;
+      margin-bottom: 2rem;
+    }
+    .divider { width: 3rem; height: 2px; background: var(--gold); margin: .6rem 0 2rem; border-radius: 1px; }
+
+    /* ── Game ── */
+    #jogo { max-width: 1100px; padding-top: 1.5rem; padding-bottom: 2rem; }
+    .game-frame-wrap {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-height: calc(100vh - 110px);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 60px rgba(245,184,0,.07);
+    }
+    .game-frame-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ── Stat cards ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+    }
+    .stat-card.gold::before  { background: linear-gradient(90deg, var(--gold), var(--gold-lt)); }
+    .stat-card.green::before { background: var(--green); }
+    .stat-card.blue::before  { background: var(--blue); }
+    .stat-card.purple::before{ background: var(--purple); }
+    .stat-label { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+    .stat-value { font-size: 1.9rem; font-weight: 800; line-height: 1.2; margin: .3rem 0 .1rem; }
+    .stat-card.gold   .stat-value { color: var(--gold); }
+    .stat-card.green  .stat-value { color: var(--green); }
+    .stat-card.blue   .stat-value { color: var(--blue); }
+    .stat-card.purple .stat-value { color: var(--purple); }
+    .stat-note { font-size: .7rem; color: var(--muted); }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; margin-bottom: 2.5rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead tr { border-bottom: 1px solid var(--gold); }
+    thead th {
+      padding: .65rem 1rem;
+      text-align: left;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    tbody td { padding: .7rem 1rem; color: var(--text); vertical-align: middle; }
+    .num { font-family: monospace; font-size: .9rem; }
+    .muted { color: var(--muted); }
+
+    /* ── Win bar ── */
+    .win-bar-wrap { display: flex; align-items: center; gap: .75rem; }
+    .win-bar-bg {
+      flex: 1; height: 6px; background: rgba(255,255,255,.07);
+      border-radius: 3px; overflow: hidden;
+    }
+    .win-bar-fill { height: 100%; border-radius: 3px; }
+    .win-pct { font-size: .78rem; color: var(--muted); font-family: monospace; min-width: 4.5rem; text-align: right; }
+
+    /* ── Paytable ── */
+    .symbol-name { display: flex; align-items: center; gap: .6rem; }
+    .sym-icon { font-size: 1.3rem; }
+    .sym-label { font-weight: 600; }
+    .sym-sub { font-size: .7rem; color: var(--muted); display: block; }
+    .pay-3 { color: var(--green); font-weight: 700; }
+    .pay-4 { color: var(--gold); font-weight: 700; }
+    .pay-5 { color: var(--gold-lt); font-weight: 800; font-size: 1rem; }
+    .tag-wild    { background: rgba(245,184,0,.15); color: var(--gold);   font-size: .65rem; padding: .1rem .5rem; border-radius: 4px; font-weight: 700; }
+    .tag-scatter { background: rgba(192,132,252,.15); color: var(--purple); font-size: .65rem; padding: .1rem .5rem; border-radius: 4px; font-weight: 700; }
+    .tag-special { background: rgba(96,165,250,.1); color: var(--blue); font-size: .65rem; padding: .1rem .5rem; border-radius: 4px; font-weight: 600; }
+
+    /* ── Paylines grid ── */
+    .paylines-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .payline-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .payline-name { font-size: .75rem; font-weight: 600; color: var(--gold); margin-bottom: .6rem; text-transform: uppercase; letter-spacing: .08em; }
+    .pl-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 3px;
+    }
+    .pl-cell {
+      aspect-ratio: 1;
+      border-radius: 3px;
+      background: rgba(255,255,255,.05);
+    }
+    .pl-cell.active { background: var(--gold); }
+
+    /* ── Rules ── */
+    .rules-list { display: flex; flex-direction: column; gap: 1rem; }
+    .rule-item {
+      display: flex;
+      gap: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      align-items: flex-start;
+    }
+    .rule-icon { font-size: 1.4rem; line-height: 1; margin-top: .1rem; flex-shrink: 0; }
+    .rule-title { font-weight: 700; font-size: .9rem; margin-bottom: .2rem; }
+    .rule-desc { font-size: .82rem; color: var(--muted); }
+
+    /* ── Docs CTA ── */
+    .docs-card {
+      background: linear-gradient(135deg, #0d0d20, #12102a);
+      border: 1px solid rgba(245,184,0,.2);
+      border-radius: 14px;
+      padding: 2.5rem;
+      text-align: center;
+    }
+    .docs-title { font-size: 1.3rem; font-weight: 800; margin-bottom: .5rem; }
+    .docs-desc { color: var(--muted); font-size: .85rem; margin-bottom: 1.5rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--gold);
+      color: #000;
+      font-weight: 700;
+      font-size: .85rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: .75rem 1.8rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .2s, transform .1s;
+    }
+    .btn:hover { background: var(--gold-lt); transform: translateY(-1px); }
+    .docs-note { margin-top: 1rem; font-size: .72rem; color: var(--muted); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem 1.5rem;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      section { padding: 2.5rem 1rem; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .paylines-list { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+  <div class="logo">🐕 Slot Dogs</div>
+  <p class="tagline">Provably Fair · Open Source · 5 Reels · 13 Paylines</p>
+  <div class="badges">
+    <span class="badge">RTP 98.17%</span>
+    <span class="badge">HMAC-SHA256</span>
+    <span class="badge">5M spins testados</span>
+    <span class="badge">Free Spins</span>
+    <span class="badge">Wild &amp; Scatter</span>
+  </div>
+</header>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav>
+  <a href="#jogo">Jogar</a>
+  <a href="#stats">Estatísticas</a>
+  <a href="#paytable">Prêmios</a>
+  <a href="#paylines">Paylines</a>
+  <a href="#regras">Regras</a>
+  <a href="#docs">API Docs</a>
+</nav>
+
+<!-- ══════════════ GAME ══════════════ -->
+<section id="jogo">
+  <div class="section-title">Jogar</div>
+  <div class="divider"></div>
+  <div class="game-frame-wrap">
+    <iframe src="game/index.html" allow="fullscreen" title="Slot Dogs WebGL"></iframe>
+  </div>
+</section>
+
+<!-- ══════════════ STATS ══════════════ -->
+<section id="stats">
+  <div class="section-title">Estatísticas da Simulação</div>
+  <div class="section-subtitle">Resultado de 5.000.000 giros com CSPRNG (crypto.randomBytes) · betPerLine = 1</div>
+  <div class="divider"></div>
+
+  <!-- Cards -->
+  <div class="stat-grid">
+    <div class="stat-card gold">
+      <div class="stat-label">RTP</div>
+      <div class="stat-value">98,17%</div>
+      <div class="stat-note">Retorno ao jogador</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Hit Rate</div>
+      <div class="stat-value">41,31%</div>
+      <div class="stat-note">Giros com pelo menos 1 prêmio</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Taxa Scatter</div>
+      <div class="stat-value">6,65%</div>
+      <div class="stat-note">Frequência de trigger de free spins</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Giros Simulados</div>
+      <div class="stat-value">5M</div>
+      <div class="stat-note">Duração: 5,96s em multi-thread</div>
+    </div>
+  </div>
+
+  <!-- Distribuição de vitórias -->
+  <div class="section-title" style="font-size:.8rem; margin-bottom:1rem;">Distribuição de vitórias</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nível</th>
+          <th>Condição</th>
+          <th>Ocorrências</th>
+          <th style="min-width:200px">Proporção</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="color:var(--muted);font-weight:700;">SEM PRÊMIO</span></td>
+          <td class="muted">Nenhuma linha / scatter</td>
+          <td class="num">2.688.665</td>
+          <td>
+            <div class="win-bar-wrap">
+              <div class="win-bar-bg"><div class="win-bar-fill" style="width:53.77%;background:var(--muted)"></div></div>
+              <span class="win-pct">53,77%</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--green);font-weight:700;">SMALL</span></td>
+          <td class="muted">Ganho &lt; 5× aposta total</td>
+          <td class="num">1.939.890</td>
+          <td>
+            <div class="win-bar-wrap">
+              <div class="win-bar-bg"><div class="win-bar-fill" style="width:38.80%;background:var(--green)"></div></div>
+              <span class="win-pct">38,80%</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--blue);font-weight:700;">BIG</span></td>
+          <td class="muted">Ganho ≥ 5× aposta total</td>
+          <td class="num">360.308</td>
+          <td>
+            <div class="win-bar-wrap">
+              <div class="win-bar-bg"><div class="win-bar-fill" style="width:7.21%;background:var(--blue)"></div></div>
+              <span class="win-pct">7,21%</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--purple);font-weight:700;">MEGA</span></td>
+          <td class="muted">Ganho ≥ 20× aposta total</td>
+          <td class="num">11.043</td>
+          <td>
+            <div class="win-bar-wrap">
+              <div class="win-bar-bg"><div class="win-bar-fill" style="width:2.2%;background:var(--purple)"></div></div>
+              <span class="win-pct">0,22%</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--gold);font-weight:800;">JACKPOT</span></td>
+          <td class="muted">Ganho ≥ 50× aposta total</td>
+          <td class="num">94</td>
+          <td>
+            <div class="win-bar-wrap">
+              <div class="win-bar-bg"><div class="win-bar-fill" style="width:.3%;background:var(--gold)"></div></div>
+              <span class="win-pct">0,002%</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Frequência de símbolos -->
+  <div class="section-title" style="font-size:.8rem; margin-bottom:1rem;">Frequência de aparição dos símbolos</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Símbolo</th>
+          <th>Aparições</th>
+          <th>% do total</th>
+          <th style="min-width:180px">Frequência</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🐕</span><span>Husky Siberiano</span></span></td>
+          <td class="num">4.997.021</td>
+          <td class="num">6,66%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:6.66%;background:#e879f9"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🦮</span><span>Golden Retriever</span></span></td>
+          <td class="num">7.497.958</td>
+          <td class="num">9,997%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:10%;background:var(--gold)"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🐶</span><span>Shiba Inu</span></span></td>
+          <td class="num">7.501.400</td>
+          <td class="num">10,00%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:10%;background:#fb923c"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🐾</span><span>Pug</span></span></td>
+          <td class="num">7.499.722</td>
+          <td class="num">10,00%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:10%;background:#34d399"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🐩</span><span>Beagle</span></span></td>
+          <td class="num">11.002.175</td>
+          <td class="num">14,67%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:14.67%;background:var(--blue)"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🌭</span><span>Dachshund</span></span></td>
+          <td class="num">24.997.913</td>
+          <td class="num">33,33%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:33.33%;background:#94a3b8"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🐾</span><span>Patinha Dourada <span class="tag-wild">WILD</span></span></span></td>
+          <td class="num">3.002.731</td>
+          <td class="num">4,00%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:4%;background:var(--gold)"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">🦴</span><span>Ossinho <span class="tag-scatter">SCATTER</span></span></span></td>
+          <td class="num">5.000.398</td>
+          <td class="num">6,67%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:6.67%;background:var(--purple)"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="symbol-name"><span class="sym-icon">⬛</span><span class="muted">Blank</span></span></td>
+          <td class="num">3.500.682</td>
+          <td class="num">4,67%</td>
+          <td><div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:4.67%;background:#334155"></div></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════ PAYTABLE ══════════════ -->
+<section id="paytable">
+  <div class="section-title">Símbolos e Prêmios</div>
+  <div class="section-subtitle">Multipliers aplicados sobre a aposta por linha (betPerLine). Combinações contam da esquerda para direita.</div>
+  <div class="divider"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Símbolo</th>
+          <th style="text-align:center">3 seguidos</th>
+          <th style="text-align:center">4 seguidos</th>
+          <th style="text-align:center">5 seguidos</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🐕</span>
+              <div><span class="sym-label">Husky Siberiano</span><span class="sym-sub">Símbolo premium</span></div>
+            </div>
+          </td>
+          <td style="text-align:center"><span class="pay-3">35×</span></td>
+          <td style="text-align:center"><span class="pay-4">75×</span></td>
+          <td style="text-align:center"><span class="pay-5">500×</span></td>
+          <td class="muted">Raro · ~6.7%</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🦮</span>
+              <div><span class="sym-label">Golden Retriever</span><span class="sym-sub"></span></div>
+            </div>
+          </td>
+          <td style="text-align:center"><span class="pay-3">15×</span></td>
+          <td style="text-align:center"><span class="pay-4">40×</span></td>
+          <td style="text-align:center"><span class="pay-5">200×</span></td>
+          <td class="muted">~10%</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🐶</span>
+              <div><span class="sym-label">Shiba Inu</span></div>
+            </div>
+          </td>
+          <td style="text-align:center"><span class="pay-3">12×</span></td>
+          <td style="text-align:center"><span class="pay-4">35×</span></td>
+          <td style="text-align:center"><span class="pay-5">175×</span></td>
+          <td class="muted">~10%</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🐾</span>
+              <div><span class="sym-label">Pug</span></div>
+            </div>
+          </td>
+          <td style="text-align:center"><span class="pay-3">9×</span></td>
+          <td style="text-align:center"><span class="pay-4">22×</span></td>
+          <td style="text-align:center"><span class="pay-5">90×</span></td>
+          <td class="muted">~10%</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🐩</span>
+              <div><span class="sym-label">Beagle</span></div>
+            </div>
+          </td>
+          <td style="text-align:center"><span class="pay-3">6×</span></td>
+          <td style="text-align:center"><span class="pay-4">18×</span></td>
+          <td style="text-align:center"><span class="pay-5">65×</span></td>
+          <td class="muted">~14.7%</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🌭</span>
+              <div><span class="sym-label">Dachshund</span><span class="sym-sub">Mais comum</span></div>
+            </div>
+          </td>
+          <td style="text-align:center"><span class="pay-3">5×</span></td>
+          <td style="text-align:center"><span class="pay-4">16×</span></td>
+          <td style="text-align:center"><span class="pay-5">55×</span></td>
+          <td class="muted">~33.3%</td>
+        </tr>
+        <tr style="background:rgba(245,184,0,.04)">
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🐾</span>
+              <div><span class="sym-label">Patinha Dourada</span><span class="sym-sub"><span class="tag-wild">WILD</span></span></div>
+            </div>
+          </td>
+          <td style="text-align:center;color:var(--muted)">—</td>
+          <td style="text-align:center;color:var(--muted)">—</td>
+          <td style="text-align:center;color:var(--muted)">—</td>
+          <td class="muted">Substitui qualquer símbolo. Não aparece nos reels 1 e 5.</td>
+        </tr>
+        <tr style="background:rgba(192,132,252,.04)">
+          <td>
+            <div class="symbol-name">
+              <span class="sym-icon">🦴</span>
+              <div><span class="sym-label">Ossinho</span><span class="sym-sub"><span class="tag-scatter">SCATTER</span></span></div>
+            </div>
+          </td>
+          <td style="text-align:center"><span style="color:var(--purple);font-weight:700;">2× TB</span></td>
+          <td style="text-align:center"><span style="color:var(--purple);font-weight:700;">5× TB</span></td>
+          <td style="text-align:center"><span style="color:var(--purple);font-weight:800;font-size:1rem;">20× TB</span></td>
+          <td class="muted">TB = aposta total (bet × 13). <strong style="color:var(--purple)">2 scatters = 1× TB</strong> (sem free spins). 3+ triggam <strong style="color:var(--purple)">8 free spins</strong>. Aparece em qualquer posição.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:.75rem;color:var(--muted);margin-top:-.5rem">* O WILD paga como Husky quando uma linha é composta apenas por Wilds.</p>
+</section>
+
+<!-- ══════════════ PAYLINES ══════════════ -->
+<section id="paylines">
+  <div class="section-title">Linhas de Pagamento</div>
+  <div class="section-subtitle">13 paylines ativas. Células douradas indicam a posição coberta por cada linha (3 linhas × 5 reels).</div>
+  <div class="divider"></div>
+
+  <div class="paylines-list">
+    <!-- path: [row_reel1, row_reel2, row_reel3, row_reel4, row_reel5] — row 0=topo, 1=meio, 2=baixo -->
+    <div class="payline-card" id="pl1"></div>
+    <div class="payline-card" id="pl2"></div>
+    <div class="payline-card" id="pl3"></div>
+    <div class="payline-card" id="pl4"></div>
+    <div class="payline-card" id="pl5"></div>
+    <div class="payline-card" id="pl6"></div>
+    <div class="payline-card" id="pl7"></div>
+    <div class="payline-card" id="pl8"></div>
+    <div class="payline-card" id="pl9"></div>
+    <div class="payline-card" id="pl10"></div>
+    <div class="payline-card" id="pl11"></div>
+    <div class="payline-card" id="pl12"></div>
+    <div class="payline-card" id="pl13"></div>
+  </div>
+
+  <script>
+    const PAYLINES = [
+      { id:'pl1',  name:'Linha do meio',   path:[1,1,1,1,1] },
+      { id:'pl2',  name:'Linha de cima',   path:[0,0,0,0,0] },
+      { id:'pl3',  name:'Linha de baixo',  path:[2,2,2,2,2] },
+      { id:'pl4',  name:'V invertido',     path:[0,1,2,1,0] },
+      { id:'pl5',  name:'V normal',        path:[2,1,0,1,2] },
+      { id:'pl6',  name:'Diagonal ↘',      path:[0,0,1,2,2] },
+      { id:'pl7',  name:'Diagonal ↗',      path:[2,2,1,0,0] },
+      { id:'pl8',  name:'Escada ↘',        path:[0,1,1,2,2] },
+      { id:'pl9',  name:'Escada ↗',        path:[2,1,1,0,0] },
+      { id:'pl10', name:'Onda suave ↘',    path:[0,1,1,1,2] },
+      { id:'pl11', name:'Onda suave ↗',    path:[2,1,1,1,0] },
+      { id:'pl12', name:'Cruzada central',         path:[1,0,1,2,1] },
+      { id:'pl13', name:'Cruzada central invertida', path:[1,2,1,0,1] },
+    ];
+    PAYLINES.forEach(({ id, name, path }) => {
+      const card = document.getElementById(id);
+      card.innerHTML = `<div class="payline-name">${name}</div><div class="pl-grid"></div>`;
+      const grid = card.querySelector('.pl-grid');
+      // Grid is col-major in CSS but we need row-major for visual
+      // Build a 3x5 matrix
+      const matrix = Array.from({length:3}, () => Array(5).fill(false));
+      path.forEach((row, col) => { matrix[row][col] = true; });
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 5; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'pl-cell' + (matrix[row][col] ? ' active' : '');
+          grid.appendChild(cell);
+        }
+      }
+    });
+  </script>
+</section>
+
+<!-- ══════════════ REGRAS ══════════════ -->
+<section id="regras">
+  <div class="section-title">Como Jogar</div>
+  <div class="divider"></div>
+
+  <div class="rules-list">
+    <div class="rule-item">
+      <div class="rule-icon">🎰</div>
+      <div>
+        <div class="rule-title">Spin básico</div>
+        <div class="rule-desc">Pressione SPIN para girar os 5 reels. O custo do giro é <strong>betPerLine × 13</strong> (aposta por linha multiplicada pelas 13 paylines ativas).</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">↔️</div>
+      <div>
+        <div class="rule-title">Combinações vencem da esquerda para direita</div>
+        <div class="rule-desc">3, 4 ou 5 símbolos idênticos em sequência a partir do reel 1, sobre uma payline ativa. Apenas a combinação mais longa da linha é paga.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">🐾</div>
+      <div>
+        <div class="rule-title">Wild — Patinha Dourada</div>
+        <div class="rule-desc">Substitui qualquer símbolo regular para completar combinações. Aparece nos reels 2, 3 e 4. Uma linha formada só por Wilds paga como Husky.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">🦴</div>
+      <div>
+        <div class="rule-title">Scatter — Ossinho</div>
+        <div class="rule-desc">Paga em qualquer posição do grid (não precisa de payline). <strong>2 scatters = 1× TB</strong>. 3+ scatters ativam <strong>8 free spins</strong> e pagam 2×, 5× ou 20× a aposta total, respectivamente.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">✨</div>
+      <div>
+        <div class="rule-title">Free Spins</div>
+        <div class="rule-desc">8 giros gratuitos com a mesma aposta por linha. Free spins podem se acumular se novos scatters aparecerem durante a rodada.</div>
+      </div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">🔐</div>
+      <div>
+        <div class="rule-title">Provably Fair</div>
+        <div class="rule-desc">Cada spin é gerado por <strong>HMAC-SHA256</strong> com server seed (comprometido antes do jogo) e client seed escolhido pelo jogador. Após o jogo é possível verificar que nenhum resultado foi adulterado. O hash do server seed ativo fica visível na sessão.</div>
+        <div style="margin-top:.6rem;display:inline-flex;align-items:center;gap:.4rem;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:6px;padding:.3rem .75rem;font-size:.72rem;color:#fbbf24;font-weight:600">⚠ Verificação pelo frontend ainda está em desenvolvimento</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ API DOCS ══════════════ -->
+<section id="docs">
+  <div class="section-title">API &amp; Documentação</div>
+  <div class="divider"></div>
+  <div class="docs-card">
+    <div class="docs-title">Backend API — Swagger UI</div>
+    <div class="docs-desc">A API REST do Slot Dogs é documentada com Swagger/OpenAPI. Acesse a documentação interativa completa.</div>
+    <a href="https://slot-dogs-production.up.railway.app/docs" target="_blank" rel="noopener" class="btn">
+      📄 Abrir Swagger UI
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer>
+  <p>Slot Dogs &copy; 2026 — Projeto open source para fins de estudo.<br>
+  RTP e estatísticas baseadas em simulação de 5.000.000 giros com CSPRNG.</p>
+</footer>
+
+</body>
+</html>

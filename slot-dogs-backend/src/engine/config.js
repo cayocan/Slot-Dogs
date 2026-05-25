@@ -34,6 +34,7 @@ const PAYTABLE = {
 };
 
 const SCATTER_MULTIPLIERS = {
+  2: 1,
   3: 2,
   4: 5,
   5: 20,
@@ -81,7 +82,8 @@ const PAYLINES = [
   { id: 11, name: 'Escada ↗',        path: [2, 1, 1, 0, 0] },
   { id: 14, name: 'Onda suave ↘',    path: [0, 1, 1, 1, 2] },
   { id: 15, name: 'Onda suave ↗',    path: [2, 1, 1, 1, 0] },
-  { id: 20, name: 'Cruzada central',  path: [1, 0, 1, 2, 1] },
+  { id: 20, name: 'Cruzada central',         path: [1, 0, 1, 2, 1] },
+  { id: 21, name: 'Cruzada central invertida', path: [1, 2, 1, 0, 1] },
 ];
 
 module.exports = {

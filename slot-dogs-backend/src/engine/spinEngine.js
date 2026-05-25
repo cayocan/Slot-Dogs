@@ -100,7 +100,7 @@ function evaluateSpin(stopPositions, betPerLine = 1) {
     }
   }
 
-  const scatterCoins = (scatterCount >= 3 && (scatterCount in SCATTER_MULTIPLIERS))
+  const scatterCoins = (scatterCount in SCATTER_MULTIPLIERS)
     ? SCATTER_MULTIPLIERS[scatterCount] * totalBet
     : 0;
 

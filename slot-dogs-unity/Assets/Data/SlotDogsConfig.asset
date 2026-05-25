@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa67a9ac151862246b5b3045b69832c3, type: 3}
   m_Name: SlotDogsConfig
   m_EditorClassIdentifier: Assembly-CSharp::SlotMachineConfig
-  paylineCount: 15
+  paylineCount: 13
   minBet: 1
-  maxBet: 300
+  maxBet: 100
   minSpinDuration: 1.5
