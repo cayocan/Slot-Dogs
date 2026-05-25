@@ -63,6 +63,9 @@ public class SlotMachinePresenter : MonoBehaviour
         _view.UpdateCoins(_ctx.Model.Coins);
         _view.UpdateFreeSpins(model.FreeSpinsRemaining);
         _view.UpdateBetPerLine(_ctx.BetPerLine, _minBet, _maxBet, _ctx.TotalBet);
+
+        // Inicia a máquina de estados — sem isso Current permanece null e nenhum spin dispara
+        _stateMachine.Transition(new IdleState(_ctx));
     }
 
     private void OnDestroy()
