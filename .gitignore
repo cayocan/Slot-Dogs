@@ -107,3 +107,7 @@ slot-dogs-backend/lab/report.csv
 slot-dogs-backend/lab/report.json
 
 Builds/*
+
+# Garantir que a build do site seja versionada
+!_ghpages/game/Build/
+!_ghpages/game/Build/**
