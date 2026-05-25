@@ -105,3 +105,5 @@ logs/
 slot-dogs-backend/_docs/PAYLINES.md
 slot-dogs-backend/lab/report.csv
 slot-dogs-backend/lab/report.json
+
+Builds/*

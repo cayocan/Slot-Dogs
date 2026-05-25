@@ -119,14 +119,14 @@ public class SlotMachineView : MonoBehaviour
     public void UpdateCoins(int coins)
     {
         if (_coinsText != null)
-            _coinsText.text = $"Coins: {coins:N0}";
+            _coinsText.text = $"{coins:N0}";
     }
 
     /// <summary>Atualiza o display de aposta por linha e os botões +/−.</summary>
     public void UpdateBetPerLine(int bet, int minBet, int maxBet)
     {
         if (_betPerLineText != null)
-            _betPerLineText.text = $"Bet: {bet}";
+            _betPerLineText.text = $"{bet}";
 
         if (_betDecreaseButton != null)
             _betDecreaseButton.interactable = bet > minBet;
@@ -141,7 +141,7 @@ public class SlotMachineView : MonoBehaviour
         if (_freeSpinsText == null) return;
         bool active = remaining > 0;
         _freeSpinsText.gameObject.SetActive(active);
-        if (active) _freeSpinsText.text = $"Free Spins: {remaining}";
+        if (active) _freeSpinsText.text = $"{remaining}";
     }
 
     /// <summary>Habilita ou desabilita o botão Spin.</summary>
