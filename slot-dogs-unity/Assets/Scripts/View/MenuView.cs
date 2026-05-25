@@ -26,7 +26,6 @@ public class MenuView : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private Button       _playButton;
-    [SerializeField] private GameObject   _loadingPanel;
     [SerializeField] private TMP_Text     _errorText;
 
     [Header("Navegação")]
@@ -46,7 +45,6 @@ public class MenuView : MonoBehaviour
         _cts = new CancellationTokenSource();
 
         SetError(null);
-        SetLoading(false);
     }
 
     private void Start()
@@ -80,7 +78,6 @@ public class MenuView : MonoBehaviour
     private async UniTaskVoid HandlePlayAsync(CancellationToken ct)
     {
         SetError(null);
-        SetLoading(true);
         _playButton.interactable = false;
 
         bool ok = await SessionPresenter.Instance.InitAsync(ct);
@@ -89,15 +86,11 @@ public class MenuView : MonoBehaviour
 
         if (ok)
         {
-            // Sessão criada com sucesso → vai para o jogo
             SceneManager.LoadScene(_gameSceneName);
         }
         else
         {
-            // Erro já logado e exibido pelo Presenter via _view (sem view aqui,
-            // então exibimos o erro direto nesta tela)
             SetError("Não foi possível conectar ao servidor.\nVerifique sua conexão e tente novamente.");
-            SetLoading(false);
             _playButton.interactable = true;
         }
     }
@@ -105,12 +98,6 @@ public class MenuView : MonoBehaviour
     // ═════════════════════════════════════════════════════════════════════════
     //  Utilitários de UI
     // ═════════════════════════════════════════════════════════════════════════
-
-    private void SetLoading(bool isLoading)
-    {
-        if (_loadingPanel != null)
-            _loadingPanel.SetActive(isLoading);
-    }
 
     private void SetError(string message)
     {

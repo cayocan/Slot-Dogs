@@ -19,6 +19,9 @@ public class SlotGameContext
     // ── Estado mutável de aposta ──────────────────────────────────────────────
     public int   BetPerLine        { get; set; }
 
+    // ── Estado mutável de auto-spin ───────────────────────────────────────────
+    public bool  IsAutoSpinActive  { get; set; }
+
     // ── Derivados ─────────────────────────────────────────────────────────────
     public int   TotalBet          => BetPerLine * PaylineCount;
     public bool  CanSpin           => Model.FreeSpinsRemaining > 0

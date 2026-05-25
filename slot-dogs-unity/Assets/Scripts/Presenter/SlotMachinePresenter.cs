@@ -52,6 +52,7 @@ public class SlotMachinePresenter : MonoBehaviour
 
         // View → SM
         _view.OnSpinRequested        += OnSpinRequested;
+        _view.OnAutoSpinToggled      += OnAutoSpinToggled;
         _view.OnBetIncreaseRequested += OnBetIncrease;
         _view.OnBetDecreaseRequested += OnBetDecrease;
 
@@ -71,6 +72,7 @@ public class SlotMachinePresenter : MonoBehaviour
         if (_view != null)
         {
             _view.OnSpinRequested        -= OnSpinRequested;
+            _view.OnAutoSpinToggled      -= OnAutoSpinToggled;
             _view.OnBetIncreaseRequested -= OnBetIncrease;
             _view.OnBetDecreaseRequested -= OnBetDecrease;
         }
@@ -88,6 +90,16 @@ public class SlotMachinePresenter : MonoBehaviour
     {
         // Aceita spin apenas em Idle; estados ativos ignoram
         if (_stateMachine.IsIn<IdleState>())
+            _stateMachine.Transition(new SpinningState(_ctx));
+    }
+
+    private void OnAutoSpinToggled()
+    {
+        _ctx.IsAutoSpinActive = !_ctx.IsAutoSpinActive;
+        _view.SetAutoSpinActive(_ctx.IsAutoSpinActive);
+
+        // Se ativado enquanto ocioso e há saldo: inicia imediatamente
+        if (_ctx.IsAutoSpinActive && _stateMachine.IsIn<IdleState>() && _ctx.CanSpin)
             _stateMachine.Transition(new SpinningState(_ctx));
     }
 

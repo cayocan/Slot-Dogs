@@ -48,15 +48,20 @@ public class SlotMachineView : MonoBehaviour
     // ── Estado da sessão ──────────────────────────────────────────────────────
 
     [Header("Estado da Sessão")]
-    [SerializeField] private TMP_Text _coinsText;
-    [SerializeField] private TMP_Text _freeSpinsText;
+    [SerializeField] private TMP_Text   _coinsText;
+    [SerializeField] private TMP_Text   _freeSpinsText;
+    [Tooltip("Ícone/painel de free spin — ativa/desativa junto com o texto")]
+    [SerializeField] private GameObject _freeSpinIcon;
 
     // ── Botão Spin ────────────────────────────────────────────────────────────
 
     [Header("Botões")]
-    [SerializeField] private Button _spinButton;
-    [SerializeField] private Button _betIncreaseButton;
-    [SerializeField] private Button _betDecreaseButton;
+    [SerializeField] private Button     _spinButton;
+    [SerializeField] private Button     _autoSpinButton;
+    [Tooltip("GameObject ativado enquanto o auto-spin estiver ligado")]
+    [SerializeField] private GameObject _autoSpinActiveIndicator;
+    [SerializeField] private Button     _betIncreaseButton;
+    [SerializeField] private Button     _betDecreaseButton;
 
     // ── Controle de aposta ──────────────────────────────────────────────────
 
@@ -69,6 +74,15 @@ public class SlotMachineView : MonoBehaviour
     [Tooltip("Delay em ms entre a parada de cada reel (esq→dir)")]
     [SerializeField] private int _reelStopDelayMs = 300;
 
+    [Header("Efeitos Visuais")]
+    [Tooltip("Particle system ativado em wins BIG, MEGA e JACKPOT")]
+    [SerializeField] private ParticleSystem _multiplierParticles;
+
+    [Header("Contador de Free Spins")]
+    [Tooltip("Painel que exibe a contagem de free spins ganhos (1 → X)")]
+    [SerializeField] private GameObject _freeSpinsCounterPanel;
+    [SerializeField] private TMP_Text   _freeSpinsCounterText;
+
     [Header("Debug")]
     [Tooltip("Quando ativo, imprime o grid do resultado no Console após cada giro")]
     [SerializeField] private bool _debugLogGrid;
@@ -77,6 +91,9 @@ public class SlotMachineView : MonoBehaviour
 
     /// <summary>Disparado quando o jogador clica no botão Spin.</summary>
     public event Action OnSpinRequested;
+
+    /// <summary>Disparado quando o jogador ativa ou desativa o auto-spin.</summary>
+    public event Action OnAutoSpinToggled;
 
     /// <summary>Disparado quando o jogador clica em "+" no bet.</summary>
     public event Action OnBetIncreaseRequested;
@@ -96,6 +113,7 @@ public class SlotMachineView : MonoBehaviour
                 reel?.Init(_symbolLibrary);
 
         _spinButton?.onClick.AddListener(() => OnSpinRequested?.Invoke());
+        _autoSpinButton?.onClick.AddListener(() => OnAutoSpinToggled?.Invoke());
         _betIncreaseButton?.onClick.AddListener(() => OnBetIncreaseRequested?.Invoke());
         _betDecreaseButton?.onClick.AddListener(() => OnBetDecreaseRequested?.Invoke());
     }
@@ -107,6 +125,7 @@ public class SlotMachineView : MonoBehaviour
                 reel?.KillSpin();
 
         _spinButton?.onClick.RemoveAllListeners();
+        _autoSpinButton?.onClick.RemoveAllListeners();
         _betIncreaseButton?.onClick.RemoveAllListeners();
         _betDecreaseButton?.onClick.RemoveAllListeners();
     }
@@ -138,10 +157,13 @@ public class SlotMachineView : MonoBehaviour
     /// <summary>Atualiza o display de free spins (oculta quando zero).</summary>
     public void UpdateFreeSpins(int remaining)
     {
-        if (_freeSpinsText == null) return;
         bool active = remaining > 0;
-        _freeSpinsText.gameObject.SetActive(active);
-        if (active) _freeSpinsText.text = $"{remaining}";
+        if (_freeSpinsText != null)
+        {
+            _freeSpinsText.gameObject.SetActive(active);
+            if (active) _freeSpinsText.text = $"{remaining}";
+        }
+        _freeSpinIcon?.SetActive(active);
     }
 
     /// <summary>Habilita ou desabilita o botão Spin.</summary>
@@ -149,6 +171,12 @@ public class SlotMachineView : MonoBehaviour
     {
         if (_spinButton != null)
             _spinButton.interactable = interactable;
+    }
+
+    /// <summary>Ativa ou desativa o indicador visual de auto-spin.</summary>
+    public void SetAutoSpinActive(bool active)
+    {
+        _autoSpinActiveIndicator?.SetActive(active);
     }
 
     /// <summary>Limpa o painel de vitória e exibe Blank em todos os reels.</summary>
@@ -197,6 +225,12 @@ public class SlotMachineView : MonoBehaviour
         if (_runningWinText != null)
             _runningWinText.gameObject.SetActive(false);
 
+        if (_freeSpinsCounterPanel != null)
+            _freeSpinsCounterPanel.SetActive(false);
+
+        if (_multiplierParticles != null)
+            _multiplierParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
         if (_reels == null) return;
         foreach (var reel in _reels)
             reel?.StartSpin();
@@ -221,8 +255,16 @@ public class SlotMachineView : MonoBehaviour
 
         if (_debugLogGrid) LogGrid(result.spin.grid);
 
+        // Contador de free spins ganhos (exibido antes dos winners)
+        if (result.spin.freeSpinsAwarded > 0)
+            await AnimateFreeSpinCounterAsync(result.spin.freeSpinsAwarded);
+
         // Anima os símbolos vencedores antes de exibir o painel de ganhos
         await AnimateWinnersAsync(result);
+
+        // Pausa extra de 0.75 s após as animações de resultado
+        if (result.spin.totalWin > 0)
+            await UniTask.Delay(750);
 
         ShowWinInfo(result.spin.totalWin, result.spin.winLevel);
     }
@@ -278,6 +320,14 @@ public class SlotMachineView : MonoBehaviour
             Debug.LogWarning("[SlotMachineView] AnimateWinnersAsync: sem células identificadas " +
                              "(reinicie o backend para ativar 'cells' e 'scatterPositions').");
             return;
+        }
+
+        // ── Particle system: ativo em wins BIG, MEGA e JACKPOT ───────────────────
+
+        if (_multiplierParticles != null &&
+            result.spin.winLevel is "big" or "mega" or "jackpot")
+        {
+            _multiplierParticles.Play();
         }
 
         // ── Contador acumulado: ativo apenas em BIG, MEGA, JACKPOT ───────────
@@ -366,6 +416,46 @@ public class SlotMachineView : MonoBehaviour
             for (int i = 0; i < pending.Count; i++) waitAll[i] = pending[i].Task;
             await UniTask.WhenAll(waitAll);
         }
+    }
+
+    // ── Contador de Free Spins ────────────────────────────────────────────────
+
+    /// <summary>
+    /// Exibe o painel contador de free spins e conta de 1 até
+    /// <paramref name="totalFreeSpins"/> com a mesma animação de pulse
+    /// do contador acumulado (BIG/MEGA/JACKPOT).
+    /// </summary>
+    private async UniTask AnimateFreeSpinCounterAsync(int totalFreeSpins)
+    {
+        if (_freeSpinsCounterPanel == null || _freeSpinsCounterText == null) return;
+
+        _freeSpinsCounterPanel.SetActive(true);
+        _freeSpinsCounterText.transform.localScale = Vector3.one;
+
+        for (int i = 1; i <= totalFreeSpins; i++)
+        {
+            _freeSpinsCounterText.text = i.ToString();
+
+            var tcs = new UniTaskCompletionSource();
+            _freeSpinsCounterText.transform.DOKill();
+            DOTween.Sequence()
+                .Append(_freeSpinsCounterText.transform
+                    .DOScale(Vector3.one * 1.4f, 0.08f).SetEase(Ease.OutQuad))
+                .Append(_freeSpinsCounterText.transform
+                    .DOScale(Vector3.one,        0.15f).SetEase(Ease.OutBounce))
+                .OnComplete(() => tcs.TrySetResult())
+                .OnKill   (() => tcs.TrySetResult());
+
+            await tcs.Task;
+
+            // Pausa entre cada número (exceto após o último)
+            if (i < totalFreeSpins)
+                await UniTask.Delay(150);
+        }
+
+        // Pausa final para o jogador ler o total
+        await UniTask.Delay(600);
+        _freeSpinsCounterPanel.SetActive(false);
     }
 
     // ── Debug ─────────────────────────────────────────────────────────────────
