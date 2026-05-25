@@ -25,16 +25,15 @@ const SYMBOLS = [
 ];
 
 const PAYTABLE = {
-  [SYMBOL_IDS.HUSKY]: [35, 75, 500],       // 3x muito melhor (mais raro: 6.7%)
-  [SYMBOL_IDS.GOLDEN]: [15, 40, 200],      // 3x melhorado (raro: 10%)
-  [SYMBOL_IDS.SHIBA]: [12, 35, 175],       // 3x melhorado (raro: 10%)
-  [SYMBOL_IDS.PUG]: [9, 22, 90],           // 3x melhorado (médio: 10%)
-  [SYMBOL_IDS.BEAGLE]: [6, 18, 65],        // 3x melhorado (16.7%)
-  [SYMBOL_IDS.DACHSHUND]: [5, 16, 55],     // calibrado para 98% RTP com scatter 6.5%
+  [SYMBOL_IDS.HUSKY]:      [26, 56, 370],
+  [SYMBOL_IDS.GOLDEN]:     [11, 30, 148],
+  [SYMBOL_IDS.SHIBA]:      [9,  26, 130],
+  [SYMBOL_IDS.PUG]:        [7,  16, 67],
+  [SYMBOL_IDS.BEAGLE]:     [5,  13, 48],
+  [SYMBOL_IDS.DACHSHUND]:  [4,  12, 41],   // calibrado para 97% RTP — 13 paylines
 };
 
 const SCATTER_MULTIPLIERS = {
-  2: 1,
   3: 2,
   4: 5,
   5: 20,

@@ -1,30 +1,30 @@
 {
-  "timestamp": "2026-05-24T20:45:51.707Z",
+  "timestamp": "2026-05-25T08:30:56.026Z",
   "spins": 5000000,
   "betPerLine": 1,
   "totalBet": 75000000,
-  "totalWin": 73624146,
-  "rtp": 98.1655,
-  "hitRate": 41.3084,
-  "scatterTriggerRate": 6.6465,
-  "freeSpinRate": 53.1723,
+  "totalWin": 63117575,
+  "rtp": 97.104,
+  "hitRate": 41.8657,
+  "scatterTriggerRate": 6.6538,
+  "freeSpinRate": 53.2306,
   "winLevelDistribution": {
-    "none": 2688665,
-    "small": 1939890,
-    "big": 360308,
-    "mega": 11043,
-    "jackpot": 94
+    "none": 2678327,
+    "small": 2098571,
+    "big": 215986,
+    "mega": 7085,
+    "jackpot": 31
   },
   "symbolHits": {
-    "Husky": 4997021,
-    "Golden": 7497958,
-    "Shiba": 7501400,
-    "Pug": 7499722,
-    "Beagle": 11002175,
-    "Dachshund": 24997913,
-    "Wild": 3002731,
-    "Scatter": 5000398,
-    "Blank": 3500682
+    "Husky": 5000066,
+    "Golden": 7497505,
+    "Shiba": 7501351,
+    "Pug": 7496872,
+    "Beagle": 11000411,
+    "Dachshund": 24999310,
+    "Wild": 3004090,
+    "Scatter": 4998507,
+    "Blank": 3501888
   },
-  "elapsedSeconds": 5.96
+  "elapsedSeconds": 6.94
 }

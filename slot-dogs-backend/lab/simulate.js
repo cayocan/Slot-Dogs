@@ -14,7 +14,7 @@ if (!isMainThread) {
   const { spins, bet } = workerData;
 
   const REEL_LEN = 30;
-  const LINES = config.PAYLINES.length; // 15
+  const LINES = config.PAYLINES.length;
 
   // Estatísticas acumuladas
   let totalWin = 0;
@@ -117,7 +117,7 @@ if (require.main === module) {
   const bet     = Number(argv.bet)     || 1;
 
   const SYMBOLS = ['Husky', 'Golden', 'Shiba', 'Pug', 'Beagle', 'Dachshund', 'Wild', 'Scatter', 'Blank'];
-  const LINES   = 15;
+  const LINES   = require('../src/engine/config').PAYLINES.length;
 
   console.log(`\nIniciando simulação: ${spins.toLocaleString()} spins | ${workers} workers | betPerLine=${bet}`);
   const t0 = Date.now();
