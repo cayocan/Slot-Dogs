@@ -43,12 +43,18 @@ public class FreeSpinsState : SlotStateBase
             {
                 Ctx.View.StartSpinVisual();
 
-                await UniTask.WhenAll(
-                    Ctx.SpinProvider.SpinAsync(Ctx.BetPerLine, ct),
-                    UniTask.Delay((int)(Ctx.MinSpinDuration * 1000f), cancellationToken: ct)
-                );
+                var minDelayTask = UniTask.Delay((int)(Ctx.MinSpinDuration * 1000f), cancellationToken: ct);
+                var spinOk       = await Ctx.SpinProvider.SpinAsync(Ctx.BetPerLine, ct);
+                await minDelayTask;
 
                 ct.ThrowIfCancellationRequested();
+
+                if (!spinOk)
+                {
+                    // API falhou durante free spin — para os visuais e aborta o ciclo
+                    await Ctx.View.StopSpinVisualAsync(null);
+                    break;
+                }
 
                 var lastSpin = Ctx.Model.LastSpin;
                 if (lastSpin != null)

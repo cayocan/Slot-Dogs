@@ -39,19 +39,30 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
     [Header("Info de Vitória")]
     [SerializeField] private GameObject _winInfoPanel;
     [SerializeField] private TMP_Text   _totalWinText;
-    [SerializeField] private TMP_Text   _winLevelText;
 
-    [Header("Contador de Ganho (Big+)")]
-    [Tooltip("Texto que exibe o total acumulado enquanto as linhas s\u00e3o animadas. S\u00f3 aparece em wins BIG, MEGA e JACKPOT.")]
+    [Tooltip("Header exibido para wins de nível SMALL")]
+    [SerializeField] private GameObject _winHeaderSmall;
+    [Tooltip("Header exibido para wins de nível BIG")]
+    [SerializeField] private GameObject _winHeaderBig;
+    [Tooltip("Header exibido para wins de nível MEGA")]
+    [SerializeField] private GameObject _winHeaderMega;
+    [Tooltip("Header exibido para wins de nível JACKPOT")]
+    [SerializeField] private GameObject _winHeaderJackpot;
+
+    [Header("Contador de Ganho")]
+    [Tooltip("Mostra o fator multiplicador da linha atual enquanto as células são animadas (ex: ×500).")]
     [SerializeField] private TMP_Text _runningWinText;
+
+    [Tooltip("Prêmio acumulado que cresce conforme cada linha é calculada (ex: +750).")]
+    [SerializeField] private TMP_Text _prizeText;
 
     // ── Estado da sessão ──────────────────────────────────────────────────────
 
     [Header("Estado da Sessão")]
     [SerializeField] private TMP_Text   _coinsText;
     [SerializeField] private TMP_Text   _freeSpinsText;
-    [Tooltip("Ícone/painel de free spin — ativa/desativa junto com o texto")]
-    [SerializeField] private GameObject _freeSpinIcon;
+    [Tooltip("Painel de free spin — ativa com zoom in ao iniciar e desativa com zoom out ao terminar")]
+    [SerializeField] private GameObject _freeSpinPanel;
 
     // ── Botão Spin ────────────────────────────────────────────────────────────
 
@@ -77,11 +88,6 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
     [Header("Efeitos Visuais")]
     [Tooltip("Particle system ativado em wins BIG, MEGA e JACKPOT")]
     [SerializeField] private ParticleSystem _multiplierParticles;
-
-    [Header("Contador de Free Spins")]
-    [Tooltip("Painel que exibe a contagem de free spins ganhos (1 → X)")]
-    [SerializeField] private GameObject _freeSpinsCounterPanel;
-    [SerializeField] private TMP_Text   _freeSpinsCounterText;
 
     [Header("Debug")]
     [Tooltip("Quando ativo, imprime o grid do resultado no Console após cada giro")]
@@ -154,16 +160,37 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
             _betIncreaseButton.interactable = bet < maxBet;
     }
 
-    /// <summary>Atualiza o display de free spins (oculta quando zero).</summary>
+    /// <summary>Atualiza o contador de free spins e anima o painel.</summary>
     public void UpdateFreeSpins(int remaining)
     {
-        bool active = remaining > 0;
         if (_freeSpinsText != null)
+            _freeSpinsText.text = $"{remaining}";
+
+        if (_freeSpinPanel == null) return;
+
+        if (remaining > 0)
         {
-            _freeSpinsText.gameObject.SetActive(active);
-            if (active) _freeSpinsText.text = $"{remaining}";
+            if (!_freeSpinPanel.activeSelf)
+            {
+                _freeSpinPanel.transform.localScale = Vector3.zero;
+                _freeSpinPanel.SetActive(true);
+                _freeSpinPanel.transform.DOKill();
+                DOTween.Sequence()
+                    .Append(_freeSpinPanel.transform.DOScale(Vector3.one * 1.15f, 0.22f).SetEase(Ease.OutQuad))
+                    .Append(_freeSpinPanel.transform.DOScale(Vector3.one,          0.12f).SetEase(Ease.InQuad));
+            }
         }
-        _freeSpinIcon?.SetActive(active);
+        else
+        {
+            if (_freeSpinPanel.activeSelf)
+            {
+                _freeSpinPanel.transform.DOKill();
+                DOTween.Sequence()
+                    .Append(_freeSpinPanel.transform.DOScale(Vector3.one * 1.15f, 0.12f).SetEase(Ease.OutQuad))
+                    .Append(_freeSpinPanel.transform.DOScale(Vector3.zero,         0.22f).SetEase(Ease.InQuad))
+                    .OnComplete(() => _freeSpinPanel.SetActive(false));
+            }
+        }
     }
 
     /// <summary>Habilita ou desabilita o botão Spin.</summary>
@@ -201,18 +228,43 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
         if (_totalWinText != null)
             _totalWinText.text = hasWin ? $"+{totalWin:N0}" : string.Empty;
 
-        if (_winLevelText != null)
-            _winLevelText.text = hasWin ? (winLevel?.ToUpperInvariant() ?? string.Empty) : string.Empty;
+        _winHeaderSmall?.SetActive(hasWin && winLevel == WinLevel.Small);
+        _winHeaderBig?.SetActive(hasWin && winLevel == WinLevel.Big);
+        _winHeaderMega?.SetActive(hasWin && winLevel == WinLevel.Mega);
+        _winHeaderJackpot?.SetActive(hasWin && winLevel == WinLevel.Jackpot);
     }
 
     private void SetWinPanelVisible(bool visible)
     {
         if (_winInfoPanel != null)
-            _winInfoPanel.SetActive(visible);
+        {
+            if (visible)
+            {
+                if (!_winInfoPanel.activeSelf)
+                {
+                    _winInfoPanel.transform.localScale = Vector3.zero;
+                    _winInfoPanel.SetActive(true);
+                }
+                _winInfoPanel.transform.DOKill();
+                DOTween.Sequence()
+                    .Append(_winInfoPanel.transform.DOScale(Vector3.one * 1.15f, 0.22f).SetEase(Ease.OutQuad))
+                    .Append(_winInfoPanel.transform.DOScale(Vector3.one,          0.12f).SetEase(Ease.InQuad));
+            }
+            else if (_winInfoPanel.activeSelf)
+            {
+                _winInfoPanel.transform.DOKill();
+                DOTween.Sequence()
+                    .Append(_winInfoPanel.transform.DOScale(Vector3.one * 1.15f, 0.12f).SetEase(Ease.OutQuad))
+                    .Append(_winInfoPanel.transform.DOScale(Vector3.zero,         0.22f).SetEase(Ease.InQuad))
+                    .OnComplete(() => _winInfoPanel.SetActive(false));
+            }
+        }
 
-        // Esconde o contador acumulado quando o painel de ganho aparece
-        if (visible && _runningWinText != null)
-            _runningWinText.gameObject.SetActive(false);
+        // Esconde o texto de multiplicador quando o painel de ganho aparece
+        if (visible)
+        {
+            if (_runningWinText != null) _runningWinText.gameObject.SetActive(false);
+        }
     }
 
     // ── Animação ──────────────────────────────────────────────────────────────
@@ -222,11 +274,8 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
     {
         SetWinPanelVisible(false);
 
-        if (_runningWinText != null)
-            _runningWinText.gameObject.SetActive(false);
-
-        if (_freeSpinsCounterPanel != null)
-            _freeSpinsCounterPanel.SetActive(false);
+        if (_runningWinText != null) _runningWinText.gameObject.SetActive(false);
+        if (_prizeText       != null) _prizeText.text = "0";
 
         if (_multiplierParticles != null)
             _multiplierParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
@@ -238,12 +287,23 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
 
     /// <summary>
     /// Para os reels esquerda→direita com delay escalonado e exibe o resultado.
+    /// Quando <paramref name="result"/> é null (ex.: falha de API), para os reels sem exibir resultado.
     /// </summary>
     public async UniTask StopSpinVisualAsync(ISpinResult result)
     {
         // Cast seguro: SlotMachineView é Slot Dogs-específico e sempre recebe SpinResponse.
         var response = (SpinResponse)result;
-        if (response?.spin?.grid == null || _reels == null) return;
+        if (_reels == null) return;
+
+        if (response?.spin?.grid == null)
+        {
+            // Sem resultado — para todos os reels na posição de repouso sem animar vencedores
+            var abortTasks = new UniTask[_reels.Length];
+            for (int i = 0; i < _reels.Length; i++)
+                abortTasks[i] = _reels[i] != null ? _reels[i].StopSpinAsync(null) : UniTask.CompletedTask;
+            await UniTask.WhenAll(abortTasks);
+            return;
+        }
 
         var tasks = new UniTask[_reels.Length];
         for (int col = 0; col < _reels.Length; col++)
@@ -256,10 +316,6 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
         await UniTask.WhenAll(tasks);
 
         if (_debugLogGrid) LogGrid(response.spin.grid);
-
-        // Contador de free spins ganhos (exibido antes dos winners)
-        if (response.spin.freeSpinsAwarded > 0)
-            await AnimateFreeSpinCounterAsync(response.spin.freeSpinsAwarded);
 
         // Anima os símbolos vencedores antes de exibir o painel de ganhos
         await AnimateWinnersAsync(response);
@@ -289,9 +345,9 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
     {
         if (result?.spin == null || result.spin.totalWin <= 0) return;
 
-        // ── Monta grupos ordenados: (células, moedas) ─────────────────────────
+        // ── Monta grupos ordenados: (células, moedas, multiplicador) ──────────
 
-        var winGroups = new List<(List<(int col, int row)> cells, int coins)>();
+        var winGroups = new List<(List<(int col, int row)> cells, int coins, int multiplier)>();
 
         if (result.spin.lineWins != null)
             foreach (var win in result.spin.lineWins)
@@ -305,7 +361,7 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
                     for (int col = 0; col < win.count; col++)
                         group.Add((col, 1));
                 if (group.Count > 0)
-                    winGroups.Add((group, win.coins));
+                    winGroups.Add((group, win.coins, win.multiplier));
             }
 
         if (result.spin.scatterPositions != null && result.spin.scatterPositions.Length > 0)
@@ -314,7 +370,7 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
             foreach (var pos in result.spin.scatterPositions)
                 if (pos.Length >= 2) sc.Add((pos[0], pos[1]));
             if (sc.Count > 0)
-                winGroups.Add((sc, result.spin.scatterCoins));
+                winGroups.Add((sc, result.spin.scatterCoins, 0)); // 0 = scatter, sem multiplicador de linha
         }
 
         if (winGroups.Count == 0)
@@ -332,52 +388,69 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
             _multiplierParticles.Play();
         }
 
-        // ── Contador acumulado: ativo apenas em BIG, MEGA, JACKPOT ───────────
+        // ── Prepara os textos de multiplicador e prêmio ───────────────────────
 
-        bool showCounter = result.spin.winLevel is "big" or "mega" or "jackpot"
-                        && _runningWinText != null;
+        int accumulated = 0;
 
-        int   accumulated = 0;
-        float textScale   = 1f;
-
-        if (showCounter)
+        if (_runningWinText != null)
         {
-            _runningWinText.transform.localScale = Vector3.one;
+            _runningWinText.transform.localScale = Vector3.zero;
             _runningWinText.text = string.Empty;
-            _runningWinText.gameObject.SetActive(true);
+            _runningWinText.gameObject.SetActive(false);
+        }
+
+        if (_prizeText != null)
+        {
+            _prizeText.text = "0";
         }
 
         // ── Anima cada grupo em sequência ─────────────────────────────────────
 
         for (int i = 0; i < winGroups.Count; i++)
         {
-            var (cells, coins) = winGroups[i];
+            var (cells, coins, multiplier) = winGroups[i];
             await AnimateCellGroupAsync(cells);
 
-            if (!showCounter) continue;
-
-            accumulated += coins;
-            textScale    = Mathf.Min(textScale + 0.2f, 2f);
-            _runningWinText.text = $"+{accumulated:N0}";
-
-            bool isLast = i == winGroups.Count - 1;
-            var  pulseTcs = new UniTaskCompletionSource();
-
-            _runningWinText.transform.DOKill();
-            float pulsePeak = Mathf.Min(textScale * 1.4f, 2f);
-            DOTween.Sequence()
-                .Append(_runningWinText.transform
-                    .DOScale(Vector3.one * pulsePeak, 0.08f).SetEase(Ease.OutQuad))
-                .Append(_runningWinText.transform
-                    .DOScale(Vector3.one * textScale, 0.15f).SetEase(Ease.OutBounce))
-                .OnComplete(() => pulseTcs.TrySetResult())
-                .OnKill   (() => pulseTcs.TrySetResult());
-
-            // Aguarda o pulse apenas do último ganho; os demais sobrepõem o próximo grupo
-            if (isLast)
+            // Multiplicador da linha atual (vazio para scatter)
+            if (_runningWinText != null)
             {
-                await pulseTcs.Task;
-                await UniTask.Delay(300); // pausa final antes do painel de ganho
+                bool hasMultiplier = multiplier > 0;
+                if (hasMultiplier)
+                {
+                    _runningWinText.text = $"×{multiplier:N0}";
+                    if (!_runningWinText.gameObject.activeSelf)
+                    {
+                        _runningWinText.transform.localScale = Vector3.zero;
+                        _runningWinText.gameObject.SetActive(true);
+                    }
+                    _runningWinText.transform.DOKill();
+                    DOTween.Sequence()
+                        .Append(_runningWinText.transform.DOScale(Vector3.one * 1.15f, 0.22f).SetEase(Ease.OutQuad))
+                        .Append(_runningWinText.transform.DOScale(Vector3.one,          0.12f).SetEase(Ease.InQuad));
+                }
+                else if (_runningWinText.gameObject.activeSelf)
+                {
+                    _runningWinText.transform.DOKill();
+                    DOTween.Sequence()
+                        .Append(_runningWinText.transform.DOScale(Vector3.one * 1.15f, 0.12f).SetEase(Ease.OutQuad))
+                        .Append(_runningWinText.transform.DOScale(Vector3.zero,         0.22f).SetEase(Ease.InQuad))
+                        .OnComplete(() => _runningWinText.gameObject.SetActive(false));
+                }
+            }
+
+            // Prêmio acumulado (sem animação de escala)
+            accumulated += coins;
+
+            if (_prizeText != null)
+            {
+                _prizeText.text = $"+{accumulated:N0}";
+
+                if (i == winGroups.Count - 1)
+                    await UniTask.Delay(300); // pausa final antes do painel de ganho
+            }
+            else if (i == winGroups.Count - 1)
+            {
+                await UniTask.Delay(300);
             }
         }
     }
@@ -418,46 +491,6 @@ public class SlotMachineView : MonoBehaviour, ISlotMachineView
             for (int i = 0; i < pending.Count; i++) waitAll[i] = pending[i].Task;
             await UniTask.WhenAll(waitAll);
         }
-    }
-
-    // ── Contador de Free Spins ────────────────────────────────────────────────
-
-    /// <summary>
-    /// Exibe o painel contador de free spins e conta de 1 até
-    /// <paramref name="totalFreeSpins"/> com a mesma animação de pulse
-    /// do contador acumulado (BIG/MEGA/JACKPOT).
-    /// </summary>
-    private async UniTask AnimateFreeSpinCounterAsync(int totalFreeSpins)
-    {
-        if (_freeSpinsCounterPanel == null || _freeSpinsCounterText == null) return;
-
-        _freeSpinsCounterPanel.SetActive(true);
-        _freeSpinsCounterText.transform.localScale = Vector3.one;
-
-        for (int i = 1; i <= totalFreeSpins; i++)
-        {
-            _freeSpinsCounterText.text = i.ToString();
-
-            var tcs = new UniTaskCompletionSource();
-            _freeSpinsCounterText.transform.DOKill();
-            DOTween.Sequence()
-                .Append(_freeSpinsCounterText.transform
-                    .DOScale(Vector3.one * 1.4f, 0.08f).SetEase(Ease.OutQuad))
-                .Append(_freeSpinsCounterText.transform
-                    .DOScale(Vector3.one,        0.15f).SetEase(Ease.OutBounce))
-                .OnComplete(() => tcs.TrySetResult())
-                .OnKill   (() => tcs.TrySetResult());
-
-            await tcs.Task;
-
-            // Pausa entre cada número (exceto após o último)
-            if (i < totalFreeSpins)
-                await UniTask.Delay(150);
-        }
-
-        // Pausa final para o jogador ler o total
-        await UniTask.Delay(600);
-        _freeSpinsCounterPanel.SetActive(false);
     }
 
     // ── Debug ─────────────────────────────────────────────────────────────────

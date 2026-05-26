@@ -44,13 +44,23 @@ public class SpinningState : SlotStateBase
     {
         try
         {
-            // API + duração mínima em paralelo (API não é cancelável por design)
-            await UniTask.WhenAll(
-                Ctx.SpinProvider.SpinAsync(Ctx.BetPerLine, ct),
-                UniTask.Delay((int)(Ctx.MinSpinDuration * 1000f), cancellationToken: ct)
-            );
+            // Inicia o delay mínimo de animação e aguarda a API em paralelo
+            var minDelayTask = UniTask.Delay((int)(Ctx.MinSpinDuration * 1000f), cancellationToken: ct);
+            var spinOk       = await Ctx.SpinProvider.SpinAsync(Ctx.BetPerLine, ct);
+            await minDelayTask;
 
             ct.ThrowIfCancellationRequested();
+
+            if (!spinOk)
+            {
+                // API falhou (ex.: saldo insuficiente) — para os visuais, desativa auto-spin e volta ao Idle
+                await Ctx.View.StopSpinVisualAsync(null);
+                Ctx.IsAutoSpinActive = false;
+                Ctx.View.SetAutoSpinActive(false);
+                Ctx.View.UpdateCoins(Ctx.Model.Coins);
+                Ctx.StateMachine.Transition(new IdleState(Ctx));
+                return;
+            }
 
             var lastSpin = Ctx.Model.LastSpin;
             if (lastSpin != null)
