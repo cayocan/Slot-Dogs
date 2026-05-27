@@ -8,6 +8,11 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Health check route (must be first, before any other route)
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
