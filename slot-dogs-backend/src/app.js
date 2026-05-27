@@ -14,6 +14,11 @@ const { version } = require('../package.json');
 function buildApp(opts = {}) {
   const app = Fastify(opts);
 
+  // Health check simples — mantido aqui para deploys/monitoramento
+  app.get('/health', async (request, reply) => {
+    return { status: 'ok' };
+  });
+
   // Swagger deve ser registrado ANTES das rotas para capturar os schemas
   app.register(require('@fastify/swagger'), {
     openapi: {
