@@ -3,4 +3,5 @@
 # NÃO versione segredos de produção; use CI/CD para substituir este arquivo no build.
 
 DEV_API_URL=http://localhost:3000
-PROD_API_URL=https://slot-dogs-production.up.railway.app
+PROD_API_URL=https://slot-dogs.onrender.com/
+USE_PROD_API_IN_EDITOR=true

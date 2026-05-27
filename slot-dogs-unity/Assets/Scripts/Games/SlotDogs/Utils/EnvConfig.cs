@@ -19,6 +19,7 @@ public static class EnvConfig
     private const string ResourcePath = "app";          // Resources/app.env → "app"
     private const string DevUrlKey    = "DEV_API_URL";
     private const string ProdUrlKey   = "PROD_API_URL";
+    private const string UseProdInEditorKey = "USE_PROD_API_IN_EDITOR";
 
     private static Dictionary<string, string> _vars;
 
@@ -27,10 +28,19 @@ public static class EnvConfig
     /// <summary>
     /// URL da API selecionada automaticamente:
     /// Development Build → DEV_API_URL | Release → PROD_API_URL.
+    /// Se USE_PROD_API_IN_EDITOR=true, sempre usa PROD_API_URL no Editor.
     /// </summary>
-    public static string ApiUrl => Debug.isDebugBuild
-        ? Get(DevUrlKey)
-        : Get(ProdUrlKey);
+    public static string ApiUrl
+    {
+        get
+        {
+#if UNITY_EDITOR
+            if (GetOrDefault(UseProdInEditorKey, "false").ToLowerInvariant() == "true")
+                return Get(ProdUrlKey);
+#endif
+            return Debug.isDebugBuild ? Get(DevUrlKey) : Get(ProdUrlKey);
+        }
+    }
 
     /// <summary>
     /// Retorna o valor da chave. Lança <see cref="KeyNotFoundException"/> se ausente.
