@@ -4,4 +4,4 @@
 
 DEV_API_URL=http://localhost:3000
 PROD_API_URL=https://slot-dogs.onrender.com/
-USE_PROD_API_IN_EDITOR=true
+USE_PROD_API_IN_EDITOR=false

@@ -1,6 +1,7 @@
 const pf = require('../provablyfair/pfManager');
 const engine = require('../engine/spinEngine');
 const logger = require('../logger/logger');
+const { PAYLINES } = require('../engine/config');
 
 function deductCoins(session, amount) {
   session.coins -= amount;
@@ -95,7 +96,7 @@ module.exports = async function (fastify, opts) {
       }
     }
     const bet = (betPerLine !== undefined && betPerLine !== null) ? betPerLine : session.betPerLine;
-    const totalBet = bet * 15; // 15 paylines
+    const totalBet = bet * PAYLINES.length; // use engine config payline count
 
     // Decrementa free spins antes de qualquer lógica de custo
     const isFreePin = session.freeSpinsRemaining > 0;
