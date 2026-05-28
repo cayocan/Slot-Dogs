@@ -1,9 +1,9 @@
 const cacheName = "DefaultCompany-slot-dogs-unity-1.0";
 const contentToCache = [
-    "Build/Build 004.loader.js",
-    "Build/Build 004.framework.js",
-    "Build/Build 004.data",
-    "Build/Build 004.wasm",
+    "Build/BUILD.loader.js",
+    "Build/BUILD.framework.js",
+    "Build/BUILD.data",
+    "Build/BUILD.wasm",
     "TemplateData/style.css"
 
 ];

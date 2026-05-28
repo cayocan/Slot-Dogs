@@ -118,7 +118,7 @@ public class BackendWakeUpPresenter
     private IEnumerator SuccessSequenceCoroutine()
     {
         StopMessageRotation();
-        SetMessage("Pronto! Vamos jogar! 🐾");
+        SetMessage("All Right! Let's play!");
         yield return new WaitForSeconds(0.6f);
         yield return new WaitForSeconds(0.4f);
         PlayFadeOut(_onComplete);
