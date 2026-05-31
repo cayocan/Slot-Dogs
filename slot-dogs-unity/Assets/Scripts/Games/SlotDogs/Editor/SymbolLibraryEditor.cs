@@ -2,7 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 using SlotEngine;
-using SlotEngine.Editor;
 
 /// <summary>
 /// Editor customizado para <see cref="SymbolLibrary"/>.

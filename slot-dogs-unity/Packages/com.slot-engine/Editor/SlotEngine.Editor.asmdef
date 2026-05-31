@@ -2,7 +2,8 @@
   "name": "SlotEngine.Editor",
   "rootNamespace": "SlotEngine.Editor",
   "references": [
-    "SlotEngine.Runtime"
+    "SlotEngine.Runtime",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": ["Editor"],
   "excludePlatforms": [],
