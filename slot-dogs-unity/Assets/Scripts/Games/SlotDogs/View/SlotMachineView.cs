@@ -6,6 +6,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using SlotEngine;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Slot Dogs — SlotMachineView

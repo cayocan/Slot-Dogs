@@ -111,3 +111,6 @@ Builds/*
 # Garantir que a build do site seja versionada
 !_ghpages/game/Build/
 !_ghpages/game/Build/**
+
+# Obsidian Vault
+obsidian-vault/*

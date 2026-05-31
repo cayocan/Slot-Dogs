@@ -1,0 +1,12 @@
+{
+  "name": "com.slot-engine",
+  "version": "1.0.0",
+  "displayName": "Slot Engine",
+  "description": "Generic slot machine engine for Unity. Includes state machine, configurable reels, symbol library and a multi-step setup wizard.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Slot Engine"
+  },
+  "keywords": ["slot", "casino", "engine", "state-machine"],
+  "dependencies": {}
+}

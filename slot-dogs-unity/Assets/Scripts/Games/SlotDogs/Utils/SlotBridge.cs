@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 using System.Runtime.InteropServices;
+using SlotEngine;
 
 public static class SlotBridge
 {

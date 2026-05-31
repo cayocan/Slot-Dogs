@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SymbolLibrary
   _entries:
   - symbolId: 0
-    displayName: Husky
+    displayName: jkasbfaksjfbaskjfg
     prefab: {fileID: 7047954853387452219, guid: 22ea99ecc48b08a46ad113be162e6dc2, type: 3}
   - symbolId: 1
     displayName: Golden

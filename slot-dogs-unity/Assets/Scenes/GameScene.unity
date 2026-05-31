@@ -729,7 +729,7 @@ MonoBehaviour:
   _betPerLineText: {fileID: 1302809124}
   _reelStopDelayMs: 300
   _multiplierParticles: {fileID: 2101388940}
-  _debugLogGrid: 0
+  _debugLogGrid: 1
 --- !u!1 &177894599
 GameObject:
   m_ObjectHideFlags: 0

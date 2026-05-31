@@ -1,4 +1,5 @@
 using System;
+using SlotEngine;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Slot Dogs — DTOs de serialização JSON
